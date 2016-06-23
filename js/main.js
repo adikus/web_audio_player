@@ -65,6 +65,9 @@ window.audio.initialize = function() {
     if(this.javascriptNode){
         this.javascriptNode.disconnect();
     }
+    if(this.context){
+        this.context.close();
+    }
     this.context = new AudioContext();
     this.javascriptNode = this.context.createScriptProcessor(2048, 1, 1);
     this.javascriptNode.connect(this.context.destination);
