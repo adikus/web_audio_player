@@ -25,6 +25,23 @@
         <h1 class="text-center">Web Audio Test</h1>
 
         <div class="audio-visual-container">
+            <div class="pull-left">
+                <button class="btn btn-primary" type="submit" ng-disabled="!bufferLoaded" ng-click="playPause()">{{playing ? 'Pause' : 'Play'}}</button>
+                <div>
+                    <strong>
+                        {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
+                    </strong>
+                </div>
+                <div>
+                    <input type="text" ng-model="seekTo">
+                    <button class="btn btn-default" type="submit" ng-click="seek()">Seek</button>
+                </div>
+                <div>
+                    <input type="text" ng-model="bufferName">
+                    <button class="btn btn-default" type="submit" ng-click="loadBuffer()">Load</button>
+                </div>
+            </div>
+
             <div class="audio-column" ng-class="bar.side" ng-repeat="bar in bars" ng-style="{transform: 'rotate('+bar.a+'deg) translate(0px, '+bar.d+'px) scale('+bar.w+', '+bar.s*bar.r+')'}"></div>
         </div>
     </div>

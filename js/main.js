@@ -27,9 +27,44 @@ app.controller('frequencyBars', function($scope) {
 
     _(audio.bars.leftOuter).each(function(bar){ $scope.bars.push(bar); });
     _(audio.bars.rightOuter).each(function(bar){ $scope.bars.push(bar); });
+
+    $scope.playing = false;
+    $scope.seekTo = null;
+    $scope.bufferLoaded = false;
+
+    $scope.playPause = function() {
+        if($scope.playing){
+            audio.stop();
+            $scope.stoppedAt = audio.getCurrentTime();
+            $scope.playing = false;
+        }else{
+            audio.play($scope.stoppedAt || 0);
+            $scope.playing = true;
+        }
+    };
+
+    $scope.seek = function() {
+        audio.play($scope.seekTo || 0);
+        $scope.playing = true;
+    };
+
+    $scope.loadBuffer = function() {
+        audio.loadBuffer($scope.bufferName, function() {
+            audio.play(0);
+            $scope.playing = true;
+        });
+        audio.stop();
+        $scope.playing = false;
+    };
 });
 
 window.audio.initialize = function() {
+    if(this.sourceNode){
+        this.sourceNode.stop();
+    }
+    if(this.javascriptNode){
+        this.javascriptNode.disconnect();
+    }
     this.context = new AudioContext();
     this.javascriptNode = this.context.createScriptProcessor(2048, 1, 1);
     this.javascriptNode.connect(this.context.destination);
@@ -56,12 +91,18 @@ window.audio.loadBuffer = function(filename, cb) {
     var request = new XMLHttpRequest();
     request.open('GET', filename, true);
     request.responseType = 'arraybuffer';
+    frequencyBarsScope.bufferLoaded = false;
 
     var self = this;
 
     request.onload = function() {
+        if(!self.context){
+            self.context = new AudioContext();
+        }
         self.context.decodeAudioData(request.response, function(buffer) {
             self.currentBuffer = buffer;
+            frequencyBarsScope.bufferLoaded = true;
+            frequencyBarsScope.$apply();
             console.log('Buffer', filename, 'loaded.');
             if(cb) cb();
         });
@@ -70,9 +111,8 @@ window.audio.loadBuffer = function(filename, cb) {
 };
 
 window.audio.play = function(position) {
-    if(this.sourceNode){
-        this.sourceNode.stop();
-    }
+    position = parseFloat(position);
+    this.initialize();
 
     this.sourceNode = this.context.createBufferSource();
     this.sourceNode.connect(this.splitter);
@@ -81,6 +121,18 @@ window.audio.play = function(position) {
     this.sourceNode.buffer = this.currentBuffer;
     this.sourceNode.start(0, position || 0);
     this.currentStartTime = position || 0;
+
+    var length = audio.sourceNode.buffer.duration;
+    frequencyBarsScope.totalMinutes = Math.floor(length / 60);
+    frequencyBarsScope.totalSeconds = Math.floor(length % 60);
+};
+
+window.audio.stop = function() {
+    this.sourceNode.stop();
+};
+
+window.audio.getCurrentTime = function() {
+    return this.currentStartTime + this.context.currentTime;
 };
 
 window.audio.getFrequencyData = function(key) {
@@ -117,6 +169,8 @@ window.audio.assignBarValues = function(array, start, scale, bars) {
 };
 
 window.audio.process = function() {
+    if(!frequencyBarsScope.playing)return;
+
     var left = audio.getFrequencyData('left');
     audio.assignBarValues(left, 0, 1, audio.bars.leftInner);
     audio.assignBarValues(left, 181, 2, audio.bars.leftOuter);
@@ -126,10 +180,13 @@ window.audio.process = function() {
     audio.assignBarValues(right, 0, 1, audio.bars.rightInner);
     audio.assignBarValues(right, 181, 2, audio.bars.rightOuter);
 
+    var currentTime = audio.getCurrentTime();
+    frequencyBarsScope.currentMinutes = Math.floor(currentTime / 60);
+    frequencyBarsScope.currentSeconds = Math.floor(currentTime % 60);
+
     frequencyBarsScope.$apply();
 };
 
 $(function(){
-    audio.initialize();
-    audio.loadBuffer('audio/panzer_vor.mp3', function() { audio.play(0); });
+    audio.loadBuffer('audio/panzer_vor.mp3', function() { frequencyBarsScope.playPause(); });
 });
