@@ -7,9 +7,9 @@ var request = require("request");
 app.use(express.static('public'));
 
 app.get('/yt/:id', function (req, res) {
-    // aY-7Y86e99Q
-    exec('youtube-dl ' + req.params.id + ' -f bestaudio -g', function callback(error, stdout){
-        console.log(stdout);
+    console.log('Extracting from YT for:', req.params.id);
+    exec('youtube-dl ' + req.params.id + ' -f 171 -g', function callback(error, stdout){
+        console.log('Extracted url:', stdout);
         request.get(stdout.replace(/(\r\n|\n|\r)/gm,"")).pipe(res);
     });
 });
