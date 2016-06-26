@@ -191,5 +191,5 @@ window.audio.process = function() {
 };
 
 $(function(){
-    audio.loadBuffer('audio/panzer_vor.mp3', function() { frequencyBarsScope.playPause(); });
+    audio.loadBuffer('audio/panzer_vor.mp3');
 });

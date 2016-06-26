@@ -10,7 +10,11 @@ app.get('/yt/:id', function (req, res) {
     console.log('Extracting from YT for:', req.params.id);
     exec('youtube-dl ' + req.params.id + ' -f 171 -g', function callback(error, stdout){
         console.log('Extracted url:', stdout);
-        request.get(stdout.replace(/(\r\n|\n|\r)/gm,"")).pipe(res);
+        if(stdout.length){
+            request.get(stdout.replace(/(\r\n|\n|\r)/gm,"")).pipe(res);
+        }else{
+            res.json({error: 'Empty response from YT.'});
+        }
     });
 });
 
