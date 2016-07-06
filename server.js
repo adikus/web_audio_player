@@ -9,7 +9,7 @@ app.use(express.static('public'));
 app.get('/yt/:id', function (req, res) {
     console.log('Extracting from YT for:', req.params.id);
     console.log(req.headers.range);
-    exec('youtube-dl ' + req.params.id + ' -f 171 -g', function callback(error, stdout){
+    exec('youtube-dl  -f 171 -g -- ' + req.params.id , function callback(error, stdout){
         console.log('Extracted url:', stdout);
         if(stdout.length){
             request.get({url: stdout.replace(/(\r\n|\n|\r)/gm,""), headers: {range: req.headers.range}}).pipe(res);
