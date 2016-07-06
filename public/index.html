@@ -23,25 +23,23 @@
 <body>
     <audio></audio>
     <div class="container-fluid" ng-app="audioVisual" ng-controller="frequencyBars">
-        <div class="audio-visual-container">
-            <div class="pull-left audio-visual-controls">
-                <button class="btn btn-primary" type="submit" ng-disabled="!bufferLoaded" ng-click="playPause()">{{playing ? 'Pause' : 'Play'}}</button>
-                <div>
-                    <strong>
-                        {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
-                    </strong>
-                </div>
-                <div>
-                    <input type="text" ng-model="seekTo">
-                    <button class="btn btn-default" type="submit" ng-click="seek()">Seek</button>
-                </div>
-                <div>
-                    <input type="text" ng-model="bufferName">
-                    <button class="btn btn-default" type="submit" ng-click="loadBuffer()">Load</button>
-                </div>
+        <div class="pull-left audio-visual-controls">
+            <button class="btn btn-primary" type="submit" ng-disabled="!bufferLoaded" ng-click="playPause()">{{playing ? 'Pause' : 'Play'}}</button>
+            <div>
+                <strong>
+                    {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
+                </strong>
             </div>
-            <canvas width=1200 height=1200></canvas>
+            <div>
+                <input type="text" ng-model="seekTo">
+                <button class="btn btn-default" type="submit" ng-click="seek()">Seek</button>
+            </div>
+            <div>
+                <input type="text" ng-model="bufferName">
+                <button class="btn btn-default" type="submit" ng-click="loadBuffer()">Load</button>
+            </div>
         </div>
+        <canvas></canvas>
     </div>
 
     <script src="js/lodash.js"></script>

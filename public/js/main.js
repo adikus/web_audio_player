@@ -4,24 +4,6 @@ var app = angular.module('audioVisual', []);
 app.controller('frequencyBars', function($scope) {
     window.frequencyBarsScope = $scope;
 
-    function makeBar(d, a, s, side, ring) {
-        return {
-            d: d,
-            r: 1,
-            a: a,
-            s: s*6,
-            w: 1,
-            side: side,
-            ring: ring
-        };
-    }
-
-    audio.bars.leftInner = _.range(181).map(function(i){ return makeBar(400, i, -1, 'left', 'inner'); });
-    audio.bars.rightInner = _.range(181).map(function(i){ return makeBar(400, -i, -1, 'right', 'inner'); });
-
-    audio.bars.leftOuter = _.range(181).map(function(i){ return makeBar(400, i, 1, 'left', 'outer'); });
-    audio.bars.rightOuter = _.range(181).map(function(i){ return makeBar(400, -i, 1, 'right', 'outer'); });
-
     $scope.playing = false;
     $scope.seekTo = null;
     $scope.bufferLoaded = false;
@@ -57,8 +39,32 @@ window.audio.initialize = function() {
     this.context = new AudioContext();
     this.sourceNode = this.context.createMediaElementSource(this.tag);
 
-    this.canvas = $('canvas')[0];
+    var $canvas = $('canvas');
+    this.canvas = $canvas[0];
+    this.height = window.innerHeight;
+    $canvas.width(this.height);
+    $canvas.height(this.height);
+    $canvas.attr('width', this.height*2);
+    $canvas.attr('height', this.height*2);
     this.ctx = this.canvas.getContext("2d");
+
+    function makeBar(d, a, s, side, ring) {
+        return {
+            d: d,
+            r: 1,
+            a: a,
+            s: s*audio.height/100,
+            w: 1,
+            side: side,
+            ring: ring
+        };
+    }
+
+    this.bars.leftInner = _.range(181).map(function(i){ return makeBar(audio.height/1.5, i, -1, 'left', 'inner'); });
+    this.bars.rightInner = _.range(181).map(function(i){ return makeBar(audio.height/1.5, -i, -1, 'right', 'inner'); });
+
+    this.bars.leftOuter = _.range(181).map(function(i){ return makeBar(audio.height/1.5, i, 1, 'left', 'outer'); });
+    this.bars.rightOuter = _.range(181).map(function(i){ return makeBar(audio.height/1.5, -i, 1, 'right', 'outer'); });
 
     this.analysers = {};
     this.addAnalyzer('left', 0.75);
@@ -171,7 +177,7 @@ window.audio.process = function(currentDelta) {
     }
     audio.prevDelta = currentDelta;
 
-    audio.ctx.clearRect(0, 0, 1200, 1200);
+    audio.ctx.clearRect(0, 0, audio.height*2, audio.height*2);
 
     var left = audio.getFrequencyData('left');
     audio.assignBarValues(left, 0, 1, 'left', audio.bars.leftInner);
@@ -191,11 +197,11 @@ window.audio.process = function(currentDelta) {
 window.audio.drawBar = function(bar, color) {
     this.ctx.save();
     this.ctx.beginPath();
-    this.ctx.translate(600, 600);
+    this.ctx.translate(this.height, this.height);
     this.ctx.rotate((bar.a + 90) * Math.PI / 180);
     this.ctx.translate(bar.d, 0);
-    this.ctx.rect(0, 0, bar.s*bar.r, bar.w*2);
-    this.ctx.fillStyle = bar.ring == 'outer' ? 'rgb('+Math.round(255 - color)+', '+Math.round(125 + color*4)+', 0)' : 'rgb('+Math.round(255 - color)+', 0, '+Math.round(color*4)+')';
+    this.ctx.rect(0, 0, bar.s*bar.r, bar.w*this.height/300);
+    this.ctx.fillStyle = bar.ring == 'outer' ? 'rgb('+Math.round(255 - color)+', '+Math.round(125 + color*4)+', 0)' : 'rgb('+Math.round(255 - color*2)+', 0, '+Math.round(color*6)+')';
     this.ctx.fill();
     this.ctx.restore();
 };

@@ -1,8 +1,5 @@
-.audio-visual-container {
+body {
     background: #eee;
-    width: 100%;
-    height: 600px;
-    position: relative;
 }
 
 .audio-visual-controls {
@@ -12,8 +9,6 @@
 }
 
 canvas {
-    width: 600px;
-    height: 600px;
     margin: 0 auto;
     display: block;
 }
