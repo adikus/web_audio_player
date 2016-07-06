@@ -24,7 +24,7 @@
     <audio></audio>
     <div class="container-fluid" ng-app="audioVisual" ng-controller="frequencyBars">
         <div class="audio-visual-container">
-            <div class="pull-left">
+            <div class="pull-left audio-visual-controls">
                 <button class="btn btn-primary" type="submit" ng-disabled="!bufferLoaded" ng-click="playPause()">{{playing ? 'Pause' : 'Play'}}</button>
                 <div>
                     <strong>
@@ -40,6 +40,7 @@
                     <button class="btn btn-default" type="submit" ng-click="loadBuffer()">Load</button>
                 </div>
             </div>
+            <canvas width=1200 height=1200></canvas>
         </div>
     </div>
 

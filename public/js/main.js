@@ -4,28 +4,23 @@ var app = angular.module('audioVisual', []);
 app.controller('frequencyBars', function($scope) {
     window.frequencyBarsScope = $scope;
 
-    function makeBar(d, a, s, side) {
-
-        var $bar = $('<div class="audio-column ' + side + '"></div>' );
-        $bar.attr('style', 'transform: rotate('+a+'deg) translate(0px, '+d+'px) scale('+1+', '+s*1+')');
-        $( ".audio-visual-container" ).append($bar);
-
+    function makeBar(d, a, s, side, ring) {
         return {
             d: d,
             r: 1,
             a: a,
-            s: s,
+            s: s*6,
             w: 1,
-            $bar: $bar,
-            side: side
-        }
+            side: side,
+            ring: ring
+        };
     }
 
-    audio.bars.leftInner = _.range(181).map(function(i){ return makeBar(200, i, 1, 'left'); });
-    audio.bars.rightInner = _.range(181).map(function(i){ return makeBar(200, -i, 1, 'right'); });
+    audio.bars.leftInner = _.range(181).map(function(i){ return makeBar(400, i, -1, 'left', 'inner'); });
+    audio.bars.rightInner = _.range(181).map(function(i){ return makeBar(400, -i, -1, 'right', 'inner'); });
 
-    audio.bars.leftOuter = _.range(181).map(function(i){ return makeBar(200, i, -1, 'left outer'); });
-    audio.bars.rightOuter = _.range(181).map(function(i){ return makeBar(200, -i, -1, 'right outer'); });
+    audio.bars.leftOuter = _.range(181).map(function(i){ return makeBar(400, i, 1, 'left', 'outer'); });
+    audio.bars.rightOuter = _.range(181).map(function(i){ return makeBar(400, -i, 1, 'right', 'outer'); });
 
     $scope.playing = false;
     $scope.seekTo = null;
@@ -61,6 +56,9 @@ window.audio.initialize = function() {
     this.tag = $('audio')[0];
     this.context = new AudioContext();
     this.sourceNode = this.context.createMediaElementSource(this.tag);
+
+    this.canvas = $('canvas')[0];
+    this.ctx = this.canvas.getContext("2d");
 
     this.analysers = {};
     this.addAnalyzer('left', 0.75);
@@ -144,15 +142,24 @@ window.audio.assignBarValues = function(array, start, scale, bars) {
     _(bars).each(function(bar, i){
         bar.r = 1 + Math.max(0, barValues[i] - average/1.1)/5.0;
         bar.w = 0.75 + average/128;
-        bar.$bar.attr('style', 'transform: rotate('+bar.a+'deg) translate(0px, '+bar.d+'px) scale('+bar.w+', '+bar.s*bar.r+')');
+        audio.drawBar(bar);
     });
 };
 
-window.audio.process = function(timestamp) {
-    if(!frequencyBarsScope.playing){
-        window.requestAnimationFrame(audio.process);
+window.audio.prevDelta = 0;
+window.audio.process = function(currentDelta) {
+    window.requestAnimationFrame(audio.process);
+    if(!frequencyBarsScope.playing || !document.hasFocus()){
         return;
     }
+
+    var delta = currentDelta - audio.prevDelta;
+    if (delta < 1000 / 45){
+        return;
+    }
+    audio.prevDelta = currentDelta;
+
+    audio.ctx.clearRect(0, 0, 1200, 1200);
 
     var left = audio.getFrequencyData('left');
     audio.assignBarValues(left, 0, 1, audio.bars.leftInner);
@@ -167,11 +174,22 @@ window.audio.process = function(timestamp) {
     frequencyBarsScope.currentMinutes = Math.floor(currentTime / 60);
     frequencyBarsScope.currentSeconds = Math.floor(currentTime % 60);
     frequencyBarsScope.$apply();
+};
 
-    window.requestAnimationFrame(audio.process);
+window.audio.drawBar = function(bar) {
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.translate(600, 600);
+    this.ctx.rotate((bar.a + 90) * Math.PI / 180);
+    this.ctx.translate(bar.d, 0);
+    this.ctx.rect(0, 0, bar.s*bar.r, bar.w*2);
+    this.ctx.fillStyle = bar.ring == 'outer' ? '#F70' : '#F00';
+    this.ctx.fill();
+    this.ctx.restore();
 };
 
 $(function(){
     audio.initialize();
-    audio.loadBuffer('yt/yPhO3LmLKOM');
+    //audio.loadBuffer('yt/yPhO3LmLKOM');
+    audio.loadBuffer('audio/panzer_vor.mp3');
 });

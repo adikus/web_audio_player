@@ -7,8 +7,8 @@ var request = require("request");
 app.use(express.static('public'));
 
 app.get('/yt/:id', function (req, res) {
-    console.log(req.headers.range);
     console.log('Extracting from YT for:', req.params.id);
+    console.log(req.headers.range);
     exec('youtube-dl ' + req.params.id + ' -f 171 -g', function callback(error, stdout){
         console.log('Extracted url:', stdout);
         if(stdout.length){

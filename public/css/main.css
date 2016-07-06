@@ -5,21 +5,15 @@
     position: relative;
 }
 
-.audio-column {
-    width: 1px;
-    height: 3px;
+.audio-visual-controls {
     position: absolute;
-    top: 250px;
-    left: 50%;
-    transform-origin: bottom;
-    background: #0F0;
+    top: 25px;
+    left: 25px;
 }
 
-.audio-column {
-    background: #F00;
-}
-
-
-.audio-column.outer {
-    background: #F70;
+canvas {
+    width: 600px;
+    height: 600px;
+    margin: 0 auto;
+    display: block;
 }
