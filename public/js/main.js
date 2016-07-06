@@ -119,22 +119,34 @@ window.audio.getFrequencyData = function(key) {
     return array;
 };
 
-window.audio.assignBarValues = function(array, start, scale, bars) {
+window.audio.history = {left: {}, right: {}};
+
+window.audio.assignBarValues = function(array, start, scale, side, bars) {
     var l = bars.length;
     var barValues = [];
+    var colorValues = [];
 
     var current = 0;
+    var currentColor = 0;
     var j = 0;
     for(var i = start; barValues.length <= l; i++){
+        if(!audio.history[side][i])audio.history[side][i] = [];
+        audio.history[side][i].push(array[i]);
+        if(audio.history[side][i].length > 20)audio.history[side][i].shift();
+
         current += array[i];
+        currentColor += Math.abs(array[i] - _(audio.history[side][i]).mean());
         j ++;
         if(j == scale){
             barValues.push(current/scale);
+            colorValues.push(currentColor/scale);
             current = 0;
+            currentColor = 0;
             j = 0;
         }
     }
     var average = _(barValues).mean();
+    var averageColor = _(colorValues).mean();
     if(average < 1){
         barValues = _(l).times(_.constant(0));
     }
@@ -142,7 +154,7 @@ window.audio.assignBarValues = function(array, start, scale, bars) {
     _(bars).each(function(bar, i){
         bar.r = 1 + Math.max(0, barValues[i] - average/1.1)/5.0;
         bar.w = 0.75 + average/128;
-        audio.drawBar(bar);
+        audio.drawBar(bar, colorValues[i] - averageColor/1.1);
     });
 };
 
@@ -162,13 +174,13 @@ window.audio.process = function(currentDelta) {
     audio.ctx.clearRect(0, 0, 1200, 1200);
 
     var left = audio.getFrequencyData('left');
-    audio.assignBarValues(left, 0, 1, audio.bars.leftInner);
-    audio.assignBarValues(left, 181, 2, audio.bars.leftOuter);
+    audio.assignBarValues(left, 0, 1, 'left', audio.bars.leftInner);
+    audio.assignBarValues(left, 181, 2, 'left', audio.bars.leftOuter);
 
 
     var right = audio.getFrequencyData('right');
-    audio.assignBarValues(right, 0, 1, audio.bars.rightInner);
-    audio.assignBarValues(right, 181, 2, audio.bars.rightOuter);
+    audio.assignBarValues(right, 0, 1, 'right', audio.bars.rightInner);
+    audio.assignBarValues(right, 181, 2, 'right', audio.bars.rightOuter);
 
     var currentTime = audio.getCurrentTime();
     frequencyBarsScope.currentMinutes = Math.floor(currentTime / 60);
@@ -176,14 +188,14 @@ window.audio.process = function(currentDelta) {
     frequencyBarsScope.$apply();
 };
 
-window.audio.drawBar = function(bar) {
+window.audio.drawBar = function(bar, color) {
     this.ctx.save();
     this.ctx.beginPath();
     this.ctx.translate(600, 600);
     this.ctx.rotate((bar.a + 90) * Math.PI / 180);
     this.ctx.translate(bar.d, 0);
     this.ctx.rect(0, 0, bar.s*bar.r, bar.w*2);
-    this.ctx.fillStyle = bar.ring == 'outer' ? '#F70' : '#F00';
+    this.ctx.fillStyle = bar.ring == 'outer' ? 'rgb('+Math.round(255 - color)+', '+Math.round(125 + color*4)+', 0)' : 'rgb('+Math.round(255 - color)+', 0, '+Math.round(color*4)+')';
     this.ctx.fill();
     this.ctx.restore();
 };
