@@ -175,7 +175,7 @@ Audio.prototype.prevDelta = 0;
 Audio.prototype.process = function(currentDelta, force) {
     this.requestAnimationFrame();
 
-    if(!force && !frequencyBarsScope.playing){
+    if(!force && !this.gui.playing){
         return;
     }
 
@@ -203,7 +203,7 @@ Audio.prototype.process = function(currentDelta, force) {
     this.assignBarValues(right, 216, 1, 'right', this.bars.rightOuter);
 
     this.gui.setCurrentTime(this.tag.currentTime);
-    frequencyBarsScope.$apply();
+    this.gui.$apply();
 };
 
 Audio.prototype.drawBar = function(bar, color) {
