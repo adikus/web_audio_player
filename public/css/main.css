@@ -4,11 +4,84 @@ body {
 
 .audio-visual-controls {
     position: absolute;
-    top: 25px;
-    left: 25px;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.audio-visual-controls .inputs {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+.audio-visual-controls .playlist {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+}
+
+.audio-visual-controls .playlist a {
+    cursor: pointer;
+}
+
+.audio-visual-controls  .slider-selection {
+    background: #B0EBFF;
 }
 
 canvas {
     margin: 0 auto;
     display: block;
+}
+
+.loader {
+    display: inline-block;
+    text-indent: -9999em;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(to right, #333333 10%, rgba(42,42,42, 0) 42%);
+    position: relative;
+    animation: load3 0.7s infinite linear;
+    transform: translateZ(0);
+}
+.loader:before {
+    width: 50%;
+    height: 50%;
+    background: #333333;
+    border-radius: 100% 0 0 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    content: '';
+}
+.loader:after {
+    background: #fff;
+    width: 75%;
+    height: 75%;
+    border-radius: 50%;
+    content: '';
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+@-webkit-keyframes load3 {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+@keyframes load3 {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }

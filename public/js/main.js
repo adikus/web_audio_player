@@ -1,213 +1,144 @@
-window.audio = {bars: {}};
+var app = angular.module('audioVisual', ['angular-sortable-view']);
 
-var app = angular.module('audioVisual', []);
 app.controller('frequencyBars', function($scope) {
     window.frequencyBarsScope = $scope;
 
     $scope.playing = false;
     $scope.seekTo = null;
-    $scope.bufferLoaded = false;
+    $scope.loading = false;
+    $scope.controls = {containerStyle: '', buttonGroupStyle: ''};
 
-    $scope.playPause = function() {
-        if($scope.playing){
-            audio.stop();
-            $scope.stoppedAt = audio.getCurrentTime();
-            $scope.playing = false;
-        }else{
-            audio.play($scope.stoppedAt || 0);
-            $scope.playing = true;
+    $scope.playPause = function() { audio.playPause() };
+
+    $scope.formatTime = function(n) {
+        return ('0' + n).slice(-2);
+    };
+
+    $scope.setDuration = function (duration) {
+        $scope.totalMinutes = $scope.formatTime(Math.floor(duration / 60));
+        $scope.totalSeconds = $scope.formatTime(Math.floor(duration % 60));
+    };
+
+    $scope.setCurrentTime = function (currentTime, slider) {
+        if($scope.sliding && !slider)return;
+        $scope.currentMinutes = $scope.formatTime(Math.floor(currentTime / 60));
+        $scope.currentSeconds = $scope.formatTime(Math.floor(currentTime % 60));
+
+        if(!slider) {
+            $scope.slider.slider('setValue', audio.tag.currentTime / audio.tag.duration * 1000);
         }
     };
 
-    $scope.seek = function() {
-        audio.play($scope.seekTo || 0);
-        $scope.playing = true;
-    };
-
-    $scope.loadBuffer = function() {
-        audio.loadBuffer($scope.bufferName, function() {
-            audio.play(0);
-            $scope.playing = true;
+    $scope.playTrack = function(track) {
+        track.onReady(function() {
+            audio.loadBuffer(track.url, function() {
+                audio.play();
+            });
         });
+        $scope.currentTrack = track;
+        $scope.storePlaylist();
         audio.stop();
-        $scope.playing = false;
     };
-});
 
-window.audio.initialize = function() {
-    this.tag = $('audio')[0];
-    this.context = new AudioContext();
-    this.sourceNode = this.context.createMediaElementSource(this.tag);
-
-    var $canvas = $('canvas');
-    this.canvas = $canvas[0];
-    this.height = window.innerHeight;
-    $canvas.width(this.height);
-    $canvas.height(this.height);
-    $canvas.attr('width', this.height*2);
-    $canvas.attr('height', this.height*2);
-    this.ctx = this.canvas.getContext("2d");
-
-    function makeBar(d, a, s, side, ring) {
-        return {
-            d: d,
-            r: 1,
-            a: a,
-            s: s*audio.height/100,
-            w: 1,
-            side: side,
-            ring: ring
-        };
-    }
-
-    this.bars.leftInner = _.range(181).map(function(i){ return makeBar(audio.height/1.5, i, -1, 'left', 'inner'); });
-    this.bars.rightInner = _.range(181).map(function(i){ return makeBar(audio.height/1.5, -i, -1, 'right', 'inner'); });
-
-    this.bars.leftOuter = _.range(181).map(function(i){ return makeBar(audio.height/1.5, i, 1, 'left', 'outer'); });
-    this.bars.rightOuter = _.range(181).map(function(i){ return makeBar(audio.height/1.5, -i, 1, 'right', 'outer'); });
-
-    this.analysers = {};
-    this.addAnalyzer('left', 0.75);
-    this.addAnalyzer('right', 0.75);
-    this.splitter = this.context.createChannelSplitter();
-
-    this.splitter.connect(this.analysers.left, 0, 0);
-    this.splitter.connect(this.analysers.right, 1, 0);
-
-    this.sourceNode.connect(this.splitter);
-    this.sourceNode.connect(this.context.destination);
-
-    window.requestAnimationFrame(this.process);
-};
-
-window.audio.addAnalyzer = function(key, smoothing) {
-    this.analysers[key] = this.context.createAnalyser()
-    this.analysers[key].smoothingTimeConstant = smoothing;
-};
-
-window.audio.loadBuffer = function(filename, cb) {
-    var self = this;
-
-    audio.tag.src = filename;
-    frequencyBarsScope.bufferLoaded = false;
-    this.tag.oncanplay = function() {
-        frequencyBarsScope.bufferLoaded = true;
-        frequencyBarsScope.$apply();
-        console.log('Buffer', filename, 'loaded.');
-        if(cb) cb();
-        self.tag.oncanplay = null;
+    $scope.loadFromURL = function(url) {
+        var track = new Track({url: url}, $scope);
+        $scope.playTrack(track);
     };
-};
 
-window.audio.play = function(position) {
-    position = parseFloat(position);
+    $scope.addToPlaylistFromURL = function(url) {
+        var track = new Track({url: url}, $scope);
+        $scope.playlist.push(track);
+        $scope.storePlaylist();
+    };
 
-    this.tag.currentTime = position || 0;
-    this.tag.play();
+    $scope.loadFromYT = function(link) {
+        var track = new Track({youtube: {link: link}}, $scope);
+        $scope.playTrack(track);
+    };
 
-    var length = this.tag.duration;
-    frequencyBarsScope.totalMinutes = Math.floor(length / 60);
-    frequencyBarsScope.totalSeconds = Math.floor(length % 60);
-};
+    $scope.addToPlaylistFromYT = function(link) {
+        var track = new Track({youtube: {link: link}}, $scope);
+        $scope.playlist.push(track);
+        $scope.storePlaylist();
+    };
 
-window.audio.stop = function() {
-    this.tag.pause();
-};
+    $scope.removeFromPlaylist = function(track, $event) {
+        var index = _($scope.playlist).indexOf(track);
+        $scope.playlist.splice(index, 1);
+        $scope.storePlaylist();
 
-window.audio.getCurrentTime = function() {
-    return this.tag.currentTime;
-};
+        $event.stopPropagation();
+    };
 
-window.audio.getFrequencyData = function(key) {
-    if(!this.analysers[key])return;
-    var array =  new Uint8Array(this.analysers[key].frequencyBinCount);
-    this.analysers[key].getByteFrequencyData(array);
-    return array;
-};
+    $scope.playingFromPlaylist = function() {
+        return _($scope.playlist).indexOf($scope.currentTrack) > -1;
+    };
 
-window.audio.history = {left: {}, right: {}};
+    $scope.playNext = function() {
+        var index = _($scope.playlist).indexOf($scope.currentTrack);
+        if(index + 1 >= $scope.playlist.length)return false;
 
-window.audio.assignBarValues = function(array, start, scale, side, bars) {
-    var l = bars.length;
-    var barValues = [];
-    var colorValues = [];
+        $scope.playTrack($scope.playlist[index + 1]);
+        return true;
+    };
 
-    var current = 0;
-    var currentColor = 0;
-    var j = 0;
-    for(var i = start; barValues.length <= l; i++){
-        if(!audio.history[side][i])audio.history[side][i] = [];
-        audio.history[side][i].push(array[i]);
-        if(audio.history[side][i].length > 20)audio.history[side][i].shift();
+    $scope.playPrevious = function() {
+        var index = _($scope.playlist).indexOf($scope.currentTrack);
+        if(index <= 0)return false;
 
-        current += array[i];
-        currentColor += Math.abs(array[i] - _(audio.history[side][i]).mean());
-        j ++;
-        if(j == scale){
-            barValues.push(current/scale);
-            colorValues.push(currentColor/scale);
-            current = 0;
-            currentColor = 0;
-            j = 0;
+        $scope.playTrack($scope.playlist[index - 1]);
+        return true;
+    };
+
+    $scope.storePlaylist = function() {
+        localStorage.setItem('playlist', JSON.stringify(_($scope.playlist).map(function(track) {
+            var json = track.toJSON();
+            json.active = track == $scope.currentTrack;
+            return json;
+        })));
+    };
+
+    $scope.restorePlaylist = function() {
+        var string = localStorage.getItem('playlist');
+        if(string.length > 2){
+            _(JSON.parse(string)).each(function(options) {
+                var track = new Track(options, $scope);
+                if(options.active){
+                    $scope.currentTrack = track;
+                }
+                $scope.playlist.push(track);
+            });
         }
-    }
-    var average = _(barValues).mean();
-    var averageColor = _(colorValues).mean();
-    if(average < 1){
-        barValues = _(l).times(_.constant(0));
-    }
+    };
 
-    _(bars).each(function(bar, i){
-        bar.r = 1 + Math.max(0, barValues[i] - average/1.1)/5.0;
-        bar.w = 0.75 + average/128;
-        audio.drawBar(bar, colorValues[i] - averageColor/1.1);
+    $scope.playlist = [];
+
+    $(function(){
+        window.audio = new Audio($('audio'), $('canvas'), $scope);
+        audio.loadBuffer(localStorage.getItem('last_played') || 'audio/panzer_vor.mp3', function() {
+            audio.tag.currentTime = localStorage.getItem('last_position') || 0;
+            frequencyBarsScope.stoppedAt = localStorage.getItem('last_position') || 0;
+        });
+
+        $scope.controls.buttonGroupStyle = {
+            'margin-top': audio.height/2 - 20
+        };
+
+        $scope.restorePlaylist();
+
+        $scope.slider = $('#current_time_slider');
+        $scope.slider.width(audio.height/3);
+        $scope.slider.slider({
+            value: 0,
+            tooltip: 'hide'
+        }).on('slideStart', function() {
+            $scope.sliding = true;
+        }).on('slideStop', function(e) {
+            $scope.sliding = false;
+            audio.seek(audio.tag.duration*e.value/1000)
+        }).on('slide', function(e) {
+            $scope.setCurrentTime(audio.tag.duration*e.value/1000, true);
+        });
+
     });
-};
-
-window.audio.prevDelta = 0;
-window.audio.process = function(currentDelta) {
-    window.requestAnimationFrame(audio.process);
-    if(!frequencyBarsScope.playing || !document.hasFocus()){
-        return;
-    }
-
-    var delta = currentDelta - audio.prevDelta;
-    if (delta < 1000 / 45){
-        return;
-    }
-    audio.prevDelta = currentDelta;
-
-    audio.ctx.clearRect(0, 0, audio.height*2, audio.height*2);
-
-    var left = audio.getFrequencyData('left');
-    audio.assignBarValues(left, 0, 1, 'left', audio.bars.leftInner);
-    audio.assignBarValues(left, 181, 2, 'left', audio.bars.leftOuter);
-
-
-    var right = audio.getFrequencyData('right');
-    audio.assignBarValues(right, 0, 1, 'right', audio.bars.rightInner);
-    audio.assignBarValues(right, 181, 2, 'right', audio.bars.rightOuter);
-
-    var currentTime = audio.getCurrentTime();
-    frequencyBarsScope.currentMinutes = Math.floor(currentTime / 60);
-    frequencyBarsScope.currentSeconds = Math.floor(currentTime % 60);
-    frequencyBarsScope.$apply();
-};
-
-window.audio.drawBar = function(bar, color) {
-    this.ctx.save();
-    this.ctx.beginPath();
-    this.ctx.translate(this.height, this.height);
-    this.ctx.rotate((bar.a + 90) * Math.PI / 180);
-    this.ctx.translate(bar.d, 0);
-    this.ctx.rect(0, 0, bar.s*bar.r, bar.w*this.height/300);
-    this.ctx.fillStyle = bar.ring == 'outer' ? 'rgb('+Math.round(255 - color)+', '+Math.round(125 + color*4)+', 0)' : 'rgb('+Math.round(255 - color*2)+', 0, '+Math.round(color*6)+')';
-    this.ctx.fill();
-    this.ctx.restore();
-};
-
-$(function(){
-    audio.initialize();
-    //audio.loadBuffer('yt/yPhO3LmLKOM');
-    audio.loadBuffer('audio/panzer_vor.mp3');
 });

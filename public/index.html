@@ -9,6 +9,7 @@
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-slider.css" rel="stylesheet">
 
 
     <link href="css/main.css" rel="stylesheet">
@@ -23,20 +24,53 @@
 <body>
     <audio></audio>
     <div class="container-fluid" ng-app="audioVisual" ng-controller="frequencyBars">
-        <div class="pull-left audio-visual-controls">
-            <button class="btn btn-primary" type="submit" ng-disabled="!bufferLoaded" ng-click="playPause()">{{playing ? 'Pause' : 'Play'}}</button>
+        <div class="audio-visual-controls text-center" ng-style="controls.containerStyle">
+            <div class="btn-group" role="group" ng-style="controls.buttonGroupStyle">
+                <button type="button" class="btn btn-default btn-lg" ng-click="playPrevious()">
+                    <span class="glyphicon glyphicon-step-backward"></span>
+                </button>
+                <button type="button" class="btn btn-default btn-lg" ng-disabled="loading" ng-click="playPause()">
+                    <span class="glyphicon glyphicon-play" ng-hide="playing || loading"></span>
+                    <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
+                    <span class="loader" ng-show="loading">Loading...</span>
+                </button>
+                <button type="button" class="btn btn-default btn-lg" ng-click="playNext()">
+                    <span class="glyphicon glyphicon-step-forward"></span>
+                </button>
+            </div>
+            <br>
+            <input id="current_time_slider" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1"/>
+
             <div>
                 <strong>
                     {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
                 </strong>
             </div>
-            <div>
-                <input type="text" ng-model="seekTo">
-                <button class="btn btn-default" type="submit" ng-click="seek()">Seek</button>
+
+            <div class="inputs text-left">
+                <div>
+                    <input type="text" ng-model="url" name="file_url" placeholder="Audio URL">
+                    <button class="btn btn-default" type="submit" ng-click="loadFromURL(url)">Play</button>
+                    <button class="btn btn-default" type="submit" ng-click="addToPlaylistFromURL(url)">Add to playlist</button>
+                </div>
+                <div class="text-left">
+                    <input type="text" ng-model="youtubeLink" name="youtube_url" placeholder="YouTube URL">
+                    <button class="btn btn-default" type="submit" ng-click="loadFromYT(youtubeLink)">Play</button>
+                    <button class="btn btn-default" type="submit" ng-click="addToPlaylistFromYT(youtubeLink)">Add to playlist</button>
+                </div>
             </div>
-            <div>
-                <input type="text" ng-model="bufferName">
-                <button class="btn btn-default" type="submit" ng-click="loadBuffer()">Load</button>
+
+            <div class="playlist text-left">
+                <div class="list-group" sv-root sv-part="playlist">
+                    <a ng-repeat="track in playlist" ng-click="playTrack(track)" ng-class="{active: currentTrack == track}" sv-element class="list-group-item">
+                        <button class="btn btn-danger btn-xs pull-right" type="submit" ng-click="removeFromPlaylist(track, $event)">x</button>
+                        {{track.title}}
+                        <br>
+                        <small ng-show="track.type == 'yt'">
+                            <strong>{{track.uploader}}</strong> | {{track.id}}
+                        </small>
+                    </a>
+                </div>
             </div>
         </div>
         <canvas></canvas>
@@ -47,8 +81,13 @@
     <script src="js/jquery.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.js"></script>
+    <script src="js/bootstrap-slider.js"></script>
 
     <script src="js/angular.js"></script>
+    <script src="js/angular-sortable-view.js"></script>
+
+    <script src="js/audio.js"></script>
+    <script src="js/track.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
