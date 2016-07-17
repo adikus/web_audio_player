@@ -49,6 +49,7 @@ Audio.prototype.setupAudio = function($audio) {
             self.tag.currentTime = 0;
         }
         self.gui.setCurrentTime(0);
+        localStorage.setItem('last_position', 0);
         self.gui.$apply();
     };
 };
@@ -197,6 +198,9 @@ Audio.prototype.process = function(currentDelta, force) {
 
     this.ctx.clearRect(0, 0, this.height*2, this.height*2);
 
+    this.ctx.save();
+    this.ctx.translate(this.height, this.height);
+
     var left = this.getFrequencyData('left');
     this.assignBarValues(left, 0, 1, 'left', this.bars.leftInner);
     this.assignBarValues(left, 216, 1, 'left', this.bars.leftOuter);
@@ -205,14 +209,18 @@ Audio.prototype.process = function(currentDelta, force) {
     this.assignBarValues(right, 0, 1, 'right', this.bars.rightInner);
     this.assignBarValues(right, 216, 1, 'right', this.bars.rightOuter);
 
-    this.gui.setCurrentTime(this.tag.currentTime);
-    this.gui.$apply();
+    this.ctx.restore();
+
+    if(this.prevTime != Math.floor(this.tag.currentTime)){
+        this.gui.setCurrentTime(this.tag.currentTime);
+        this.gui.$apply();
+        this.prevTime = Math.floor(this.tag.currentTime);
+    }
 };
 
 Audio.prototype.drawBar = function(bar, color) {
     this.ctx.save();
     this.ctx.beginPath();
-    this.ctx.translate(this.height, this.height);
     this.ctx.rotate((bar.a + 90) * Math.PI / 180);
     this.ctx.translate(bar.d, 0);
     this.ctx.rect(0, 0, bar.s*bar.r, bar.w*this.height/300);

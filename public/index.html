@@ -24,7 +24,7 @@
 <body>
     <audio></audio>
     <div class="container-fluid" ng-app="audioVisual" ng-controller="frequencyBars">
-        <div class="audio-visual-controls text-center" ng-style="controls.containerStyle">
+        <div class="audio-visual-controls text-center" ng-cloak ng-style="controls.containerStyle">
             <div class="btn-group" role="group" ng-style="controls.buttonGroupStyle">
                 <button type="button" class="btn btn-default btn-lg" ng-click="playPrevious()">
                     <span class="glyphicon glyphicon-step-backward"></span>
@@ -39,9 +39,9 @@
                 </button>
             </div>
             <br>
-            <input id="current_time_slider" class="ng-cloak" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1"/>
+            <input id="current_time_slider" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1"/>
 
-            <div class="ng-cloak">
+            <div>
                 <strong>
                     {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
                 </strong>
@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="playlist text-left ng-cloak">
+            <div class="playlist text-left">
                 <div class="list-group" sv-root sv-part="playlist">
                     <a ng-repeat="track in playlist" ng-click="playTrack(track)" ng-class="{active: currentTrack == track}" sv-element class="list-group-item">
                         <button class="btn btn-danger btn-xs pull-right" type="submit" ng-click="removeFromPlaylist(track, $event)">x</button>
