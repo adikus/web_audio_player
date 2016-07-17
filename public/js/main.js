@@ -136,8 +136,11 @@ app.controller('frequencyBars', function($scope) {
         }).on('slideStop', function(e) {
             $scope.sliding = false;
             audio.seek(audio.tag.duration*e.value/1000)
+            $scope.setCurrentTime(audio.tag.duration*e.value/1000, true);
+            $scope.$apply();
         }).on('slide', function(e) {
             $scope.setCurrentTime(audio.tag.duration*e.value/1000, true);
+            $scope.$apply();
         });
 
     });

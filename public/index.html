@@ -32,16 +32,16 @@
                 <button type="button" class="btn btn-default btn-lg" ng-disabled="loading" ng-click="playPause()">
                     <span class="glyphicon glyphicon-play" ng-hide="playing || loading"></span>
                     <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
-                    <span class="loader" ng-show="loading">Loading...</span>
+                    <span class="loader" ng-show="loading"></span>
                 </button>
                 <button type="button" class="btn btn-default btn-lg" ng-click="playNext()">
                     <span class="glyphicon glyphicon-step-forward"></span>
                 </button>
             </div>
             <br>
-            <input id="current_time_slider" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1"/>
+            <input id="current_time_slider" class="ng-cloak" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1"/>
 
-            <div>
+            <div class="ng-cloak">
                 <strong>
                     {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
                 </strong>
@@ -60,10 +60,11 @@
                 </div>
             </div>
 
-            <div class="playlist text-left">
+            <div class="playlist text-left ng-cloak">
                 <div class="list-group" sv-root sv-part="playlist">
                     <a ng-repeat="track in playlist" ng-click="playTrack(track)" ng-class="{active: currentTrack == track}" sv-element class="list-group-item">
                         <button class="btn btn-danger btn-xs pull-right" type="submit" ng-click="removeFromPlaylist(track, $event)">x</button>
+                        <span class="loader" ng-show="track.type == 'yt' && track.loading"></span>
                         {{track.title}}
                         <br>
                         <small ng-show="track.type == 'yt'">

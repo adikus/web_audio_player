@@ -2,6 +2,10 @@ body {
     background: #eee;
 }
 
+[ng\:cloak], [ng-cloak], .ng-cloak {
+    display: none !important;
+}
+
 .audio-visual-controls {
     position: absolute;
     top: 0;

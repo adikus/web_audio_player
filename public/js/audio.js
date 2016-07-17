@@ -148,13 +148,17 @@ Audio.prototype.assignBarValues = function(array, start, scale, side, bars) {
 };
 
 Audio.prototype.getScaledValues = function(array, start, scale, side, length, cb) {
-    return _(array.slice(start, start + length * scale)).map(function(v, i) {
-        return [cb(v, i), i]
-    }).groupBy(function(v) {
-        return Math.floor(v[1]/scale);
-    }).values().map(function(values) {
-        return _(values).map(function(v){ return v[0]; }).mean();
-    }).value();
+    if(scale == 1){
+        return array.slice(start, start + length * scale).map(function(v, i) { return cb(v, i) });
+    }else{
+        return _(array.slice(start, start + length * scale)).map(function(v, i) {
+            return [cb(v, i), i]
+        }).groupBy(function(v) {
+            return Math.floor(v[1]/scale);
+        }).values().map(function(values) {
+            return _(values).map(function(v){ return v[0]; }).mean();
+        }).value();
+    }
 };
 
 Audio.prototype.saveHistory = function(side, i, value) {
@@ -170,7 +174,7 @@ Audio.prototype.requestAnimationFrame = function() {
     });
 };
 
-Audio.prototype.targetFPS = 45;
+Audio.prototype.targetFPS = 40;
 Audio.prototype.prevDelta = 0;
 Audio.prototype.process = function(currentDelta, force) {
     this.requestAnimationFrame();
@@ -196,7 +200,6 @@ Audio.prototype.process = function(currentDelta, force) {
     var left = this.getFrequencyData('left');
     this.assignBarValues(left, 0, 1, 'left', this.bars.leftInner);
     this.assignBarValues(left, 216, 1, 'left', this.bars.leftOuter);
-
 
     var right = this.getFrequencyData('right');
     this.assignBarValues(right, 0, 1, 'right', this.bars.rightInner);
