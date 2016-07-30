@@ -6,6 +6,21 @@ a {
     cursor: pointer;
 }
 
+canvas {
+    margin: 0 auto;
+    display: block;
+    position: relative;
+}
+
+#background {
+    position: absolute;
+    top: 0;
+}
+
+.canvas-container {
+    min-height: 1px;
+}
+
 [ng\:cloak], [ng-cloak], .ng-cloak {
     display: none !important;
 }
@@ -48,11 +63,6 @@ a {
 
 .audio-visual-controls  .slider-selection {
     background: #B0EBFF;
-}
-
-canvas {
-    margin: 0 auto;
-    display: block;
 }
 
 .loader {

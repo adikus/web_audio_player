@@ -24,6 +24,10 @@
 <body>
     <audio></audio>
     <div class="container-fluid" ng-app="audioVisual" ng-controller="frequencyBars">
+        <div class="canvas-container">
+            <canvas id="background"></canvas>
+            <canvas id="foreground"></canvas>
+        </div>
         <div class="audio-visual-controls text-center" ng-cloak ng-style="controls.containerStyle">
             <div class="btn-group" role="group" ng-style="controls.buttonGroupStyle">
                 <button type="button" class="btn btn-default btn-lg" ng-click="playPrevious()">
@@ -106,7 +110,6 @@
                 </div>
             </div>
         </div>
-        <canvas></canvas>
 
         <!-- Playlist modal -->
         <div class="modal fade" id="playlist_modal" tabindex="-1" role="dialog">

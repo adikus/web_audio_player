@@ -41,11 +41,41 @@ app.controller('frequencyBars', function($scope) {
             audio.loadBuffer(track.url, function() {
                 audio.play();
             });
+            if(track.info){
+                $scope.setBackgroundImage(track.info.thumbnail);
+            }
             $scope.storePlaylist();
         });
         audio.stop();
 
         setTimeout(function(){ $scope.scrollToCurrentTrack(); }, 100);
+    };
+
+    $scope.setBackgroundImage = function(url) {
+        var img = new Image();
+        img.onload = function () {
+            $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
+            $scope.backgroundCtx.globalAlpha = 0.5;
+            $scope.backgroundCtx.save();
+            $scope.backgroundCtx.beginPath();
+            $scope.backgroundCtx.arc(audio.height/2, audio.height/2, audio.height/2/1.5, 0, 2*Math.PI);
+            $scope.backgroundCtx.fillStyle = '#FF0000';
+            $scope.backgroundCtx.fill();
+            $scope.backgroundCtx.globalCompositeOperation = "source-in";
+
+            var sx = img.width > img.height ? (img.width - img.height)/2 : 0;
+            var sy = img.width > img.height ? 0 : (img.height - img.width)/2;
+            var size = Math.min(img.width, img.height);
+            var dx = audio.height/2/3;
+            var dsize = audio.height - 2*dx;
+
+            $scope.backgroundCtx.drawImage(img, sx, sy, size, size, dx, dx, dsize, dsize);
+            $scope.backgroundCtx.restore();
+            $scope.$apply();
+
+            localStorage.setItem('last_background', url);
+        };
+        img.src = url;
     };
 
     $scope.scrollToCurrentTrack = function() {
@@ -220,12 +250,26 @@ app.controller('frequencyBars', function($scope) {
     $scope.playlist = [];
 
     $(function(){
-        window.audio = new Audio($('audio'), $('canvas'), $scope);
+        window.audio = new Audio($('audio'), $('#foreground'), $scope);
         if(localStorage.getItem('last_played')){
             audio.loadBuffer(localStorage.getItem('last_played'), function() {
                 audio.tag.currentTime = localStorage.getItem('last_position') || 0;
                 frequencyBarsScope.stoppedAt = localStorage.getItem('last_position') || 0;
             });
+        }
+
+        $scope.$foreground = $('#foreground');
+        $scope.$background = $('#background');
+        $scope.$background.attr('width', $scope.$foreground.width());
+        $scope.$background.attr('height', $scope.$foreground.height());
+        $scope.$background.attr('style', 'margin-left:' + Math.round($scope.$foreground.offset().left - $scope.$foreground.position().left) + 'px')
+        $scope.$background.width($scope.$foreground.width());
+        $scope.$background.height($scope.$foreground.height());
+
+        $scope.backgroundCtx = $scope.$background[0].getContext("2d");
+
+        if(localStorage.getItem('last_background')){
+            $scope.setBackgroundImage(localStorage.getItem('last_background'));
         }
 
         $scope.controls.buttonGroupStyle = {
