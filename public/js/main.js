@@ -33,14 +33,25 @@ app.controller('frequencyBars', function($scope) {
     };
 
     $scope.playTrack = function(track) {
+        $scope.currentTrack = track;
+        if(track.error){
+            return $scope.playNext();
+        }
         track.onReady(function() {
             audio.loadBuffer(track.url, function() {
                 audio.play();
             });
         });
-        $scope.currentTrack = track;
         $scope.storePlaylist();
         audio.stop();
+
+        setTimeout(function(){ $scope.scrollToCurrentTrack(); }, 100);
+    };
+
+    $scope.scrollToCurrentTrack = function() {
+        $('.playlist .list-group').animate({
+            scrollTop: $('.playlist .list-group-item.active').offset().top + $('.playlist .list-group').scrollTop() - 75
+        }, 500);
     };
 
     $scope.loadFromURL = function(url) {
@@ -63,6 +74,18 @@ app.controller('frequencyBars', function($scope) {
         var track = new Track({youtube: {link: link}}, $scope);
         $scope.playlist.push(track);
         $scope.storePlaylist();
+    };
+
+    $scope.addYTPlaylist = function(link) {
+        var playlistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch(?:.+?)|playlist\?)list=([\-A-Za-z\d]+)/;
+        var playlistID = link.match(playlistRegex)[1];
+        $.get('yt-playlist/'+playlistID+'/info').success(function(data) {
+            _(data).each(function(trackInfo){
+                var track = new Track({youtube: {id: trackInfo.id, title: trackInfo.title}}, $scope);
+                track.onReady(function() { $scope.storePlaylist(); });
+                $scope.playlist.push(track);
+            });
+        });
     };
 
     $scope.removeFromPlaylist = function(track, $event) {
@@ -99,16 +122,16 @@ app.controller('frequencyBars', function($scope) {
         return true;
     };
 
-    $scope.storePlaylist = function() {
-        localStorage.setItem('playlist', JSON.stringify(_($scope.playlist).map(function(track) {
+    $scope.storePlaylist = function(name) {
+        localStorage.setItem(name || 'playlist', JSON.stringify(_($scope.playlist).map(function(track) {
             var json = track.toJSON();
             json.active = track == $scope.currentTrack;
             return json;
         })));
     };
 
-    $scope.restorePlaylist = function() {
-        var string = localStorage.getItem('playlist');
+    $scope.restorePlaylist = function(name) {
+        var string = localStorage.getItem(name || 'playlist');
         if(string.length > 2){
             _(JSON.parse(string)).each(function(options) {
                 var track = new Track(options, $scope);
@@ -118,10 +141,17 @@ app.controller('frequencyBars', function($scope) {
                 $scope.playlist.push(track);
             });
         }
+
+        setTimeout(function(){ $scope.scrollToCurrentTrack(); }, 500);
     };
 
     $scope.reversePlaylist = function () {
         $scope.playlist = $scope.playlist.reverse();
+        $scope.storePlaylist();
+    };
+
+    $scope.clearPlaylist = function () {
+        $scope.playlist = [];
         $scope.storePlaylist();
     };
 
@@ -133,6 +163,47 @@ app.controller('frequencyBars', function($scope) {
     $scope.toggleLoopPlaylist = function() {
         $scope.loopPlaylist = !$scope.loopPlaylist;
         localStorage.setItem('loopPlaylist', $scope.loopPlaylist);
+    };
+
+    $scope.savePlaylistModal = function() {
+        $scope.playlistModalMode = 'save';
+        $('#playlist_modal').modal('toggle');
+    };
+
+    $scope.loadPlaylistModal = function() {
+        $scope.playlistModalMode = 'load';
+        $scope.playlistNames = _(JSON.parse(localStorage.getItem('playlist_names'))).map(function(name) {
+            return name.split('-').slice(1).join('-');
+        }).value();
+        $('#playlist_modal').modal('toggle');
+    };
+
+    $scope.savePlaylist = function(name) {
+        if(!name || name.length == 0)return;
+        var names = JSON.parse(localStorage.getItem('playlist_names') || '[]');
+        names.push('playlist-'+name);
+        localStorage.setItem('playlist_names', JSON.stringify(_(names).uniq()));
+        $scope.storePlaylist(_(names).last());
+        $('#playlist_modal').modal('hide');
+    };
+
+    $scope.loadPlaylist = function(name) {
+        $scope.playlist = [];
+        $scope.restorePlaylist(name);
+        $scope.playTrack($scope.playlist[0]);
+        $('#playlist_modal').modal('hide');
+    };
+
+    $scope.removePlaylist = function(name, $event) {
+        localStorage.removeItem(name);
+        var names = JSON.parse(localStorage.getItem('playlist_names') || '[]');
+        names = _(names).reject(function(n) { return n == name; }).value();
+        localStorage.setItem('playlist_names', JSON.stringify(_(names).uniq()));
+        $scope.playlistNames = _(names).map(function(name) {
+            return name.split('-').slice(1).join('-');
+        }).value();
+
+        $event.stopPropagation();
     };
 
     $scope.playlist = [];

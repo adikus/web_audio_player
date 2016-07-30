@@ -9,22 +9,41 @@ app.use(express.static('public'));
 
 var ytInfos = {};
 
-app.get('/yt/:id/info', function(req, res) {
-    if(ytInfos[req.params.id] && !req.query.reload){
-        console.log('Using extracted info from YT for:', req.params.id);
-        return res.json(ytInfos[req.params.id]);
+function retrieveTrackInfo(id, reload, cb) {
+    if(ytInfos[id] && !reload){
+        console.log('Using extracted info from YT for:', id);
+        return cb(ytInfos[id]);
     }
-    if(req.query.reload){
-        console.log('Re-Extracting from YT for:', req.params.id);
+    if(reload){
+        console.log('Re-Extracting from YT for:', id);
     }else{
-        console.log('Extracting from YT for:', req.params.id);
+        console.log('Extracting from YT for:', id);
     }
-    exec('youtube-dl  -j -- ' + req.params.id , function callback(error, stdout){
-        var info = JSON.parse(stdout);
-        var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
-        ytInfos[filteredInfo.id] = filteredInfo;
-        filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
-        res.json(filteredInfo);
+
+    exec('youtube-dl  -j -- ' + id , function (error, stdout, stderr){
+        if(stdout.length > 2){
+            var info = JSON.parse(stdout);
+            var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
+            ytInfos[filteredInfo.id] = filteredInfo;
+            filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
+        }else{
+            ytInfos[id] = {error: stderr};
+        }
+        cb(ytInfos[id]);
+    });
+}
+
+app.get('/yt/:id/info', function(req, res) {
+    retrieveTrackInfo(req.params.id, req.query.reload, function(trackInfo) {
+        res.json(trackInfo)
+    });
+});
+
+app.get('/yt-playlist/:id/info', function(req, res) {
+    console.log('Extracting from YT for playlist:', req.params.id);
+    exec('youtube-dl  -j --flat-playlist -- ' + req.params.id , function callback(error, stdout){
+        var info = JSON.parse('[' + stdout.slice(0, -1).split('\n').join(',') + ']');
+        res.json(info);
     });
 });
 
@@ -34,17 +53,11 @@ function pipeYTVideo(url, req, res) {
 }
 
 app.get('/yt/:id', function (req, res) {
-    if(ytInfos[req.params.id]){
-        console.log('Using extracted url from YT for:', req.params.id);
-        return pipeYTVideo(ytInfos[req.params.id].url, req, res)
-    }
-
-    console.log('Extracting from YT for:', req.params.id);
-    exec('youtube-dl  -f 171 -g -- ' + req.params.id , function callback(error, stdout){
-        if(stdout.length){
-            pipeYTVideo(stdout, req, res)
+    retrieveTrackInfo(req.params.id, req.query.reload, function(trackInfo) {
+        if(trackInfo.error){
+            res.status(404).send('Not found');
         }else{
-            res.json({error: 'Empty response from YT.'});
+            pipeYTVideo(trackInfo.url, req, res);
         }
     });
 });

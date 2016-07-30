@@ -2,6 +2,10 @@ body {
     background: #eee;
 }
 
+a {
+    cursor: pointer;
+}
+
 [ng\:cloak], [ng-cloak], .ng-cloak {
     display: none !important;
 }
@@ -26,10 +30,6 @@ body {
     width: 250px;
 }
 
-.audio-visual-controls .playlist a {
-    cursor: pointer;
-}
-
 .audio-visual-controls .playlist .list-group {
     overflow-y: scroll;
 }
@@ -40,6 +40,10 @@ body {
 
 .audio-visual-controls .playlist .panel-heading a {
     text-decoration: none;
+}
+
+.audio-visual-controls .playlist .dropdown {
+    display: inline-block;
 }
 
 .audio-visual-controls  .slider-selection {

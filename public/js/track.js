@@ -11,25 +11,37 @@ Track.prototype.yt_regex = /(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/watch\?(?
 Track.prototype.setupForYoutube = function(yt) {
     this.type = 'yt';
 
+    this.title = yt.title;
+    this.uploader = yt.uploader;
+    this.url = yt.url;
+
     if(yt.id){
         this.id = yt.id;
     }else{
         this.id = yt.link.match(this.yt_regex)[1];
     }
-    if(this.id){
+    if(this.id && (!this.title || !this.uploader || !this.url)){
+        console.log('Loading info for', this);
         this.loading = true;
         this.url = 'yt/'+this.id;
 
         var self = this;
         $.get('yt/'+this.id+'/info').success(function(data) {
-            self.title = data.title;
-            self.uploader = data.uploader;
-            self.info = data;
+            if(data.error){
+                self.title = 'Unable to retrieve track';
+                self.error = true;
+            }else{
+                self.title = data.title;
+                self.uploader = data.uploader;
+                self.info = data;
+            }
             self.loading= false;
             self.ready = true;
             if(self.ready_callback)self.ready_callback();
             self.ngScope.$apply();
         });
+    } else {
+        this.ready = true;
     }
 };
 
@@ -39,7 +51,7 @@ Track.prototype.reload = function() {
         this.ngScope.$apply();
 
         var self = this;
-        $.get('yt/'+this.id+'/info?reload=true').success(function(data) {
+        $.get('yt/'+this.id+'/info?reload=true').success(function() {
             self.loading= false;
             audio.reloaded = true;
             audio.loadBuffer(self.url);
@@ -63,6 +75,6 @@ Track.prototype.toJSON = function() {
     if(this.type == 'url'){
         return {url: this.url};
     }else if(this.type == 'yt'){
-        return {youtube: {id: this.id}};
+        return {youtube: {id: this.id, title: this.title, uploader: this.uploader, url: this.url}};
     }
 };
