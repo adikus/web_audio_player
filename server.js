@@ -24,6 +24,8 @@ function retrieveTrackInfo(id, reload, cb) {
         if(stdout.length > 2){
             var info = JSON.parse(stdout);
             var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
+            filteredInfo.thumbnail = filteredInfo.thumbnail.replace('/default', '/maxresdefault');
+            filteredInfo.thumbnail = filteredInfo.thumbnail.replace('/hqdefault', '/maxresdefault');
             ytInfos[filteredInfo.id] = filteredInfo;
             filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
         }else{
