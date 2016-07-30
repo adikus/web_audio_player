@@ -10,6 +10,7 @@ app.controller('frequencyBars', function($scope) {
 
     $scope.stopAfterCurrent = localStorage.getItem('stopAfterCurrent') == 'true';
     $scope.loopPlaylist = localStorage.getItem('loopPlaylist') == 'true';
+    $scope.showBackground = localStorage.getItem('show_background') ? localStorage.getItem('show_background') == 'true' : true;
 
     $scope.playPause = function() { audio.playPause() };
 
@@ -52,30 +53,44 @@ app.controller('frequencyBars', function($scope) {
     };
 
     $scope.setBackgroundImage = function(url) {
-        var img = new Image();
-        img.onload = function () {
-            $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
-            $scope.backgroundCtx.globalAlpha = 0.5;
-            $scope.backgroundCtx.save();
-            $scope.backgroundCtx.beginPath();
-            $scope.backgroundCtx.arc(audio.height/2, audio.height/2, audio.height/2/1.5, 0, 2*Math.PI);
-            $scope.backgroundCtx.fillStyle = '#FF0000';
-            $scope.backgroundCtx.fill();
-            $scope.backgroundCtx.globalCompositeOperation = "source-in";
-
-            var sx = img.width > img.height ? (img.width - img.height)/2 : 0;
-            var sy = img.width > img.height ? 0 : (img.height - img.width)/2;
-            var size = Math.min(img.width, img.height);
-            var dx = audio.height/2/3;
-            var dsize = audio.height - 2*dx;
-
-            $scope.backgroundCtx.drawImage(img, sx, sy, size, size, dx, dx, dsize, dsize);
-            $scope.backgroundCtx.restore();
-            $scope.$apply();
-
+        if(url){
             localStorage.setItem('last_background', url);
-        };
-        img.src = url;
+            if(!$scope.showBackground)return;
+            var img = new Image();
+            img.onload = function () {
+                $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
+                $scope.backgroundCtx.globalAlpha = 0.5;
+                $scope.backgroundCtx.save();
+                $scope.backgroundCtx.beginPath();
+                $scope.backgroundCtx.arc(audio.height/2, audio.height/2, audio.height/2/1.5, 0, 2*Math.PI);
+                $scope.backgroundCtx.fillStyle = '#FF0000';
+                $scope.backgroundCtx.fill();
+                $scope.backgroundCtx.globalCompositeOperation = "source-in";
+
+                var sx = img.width > img.height ? (img.width - img.height)/2 : 0;
+                var sy = img.width > img.height ? 0 : (img.height - img.width)/2;
+                var size = Math.min(img.width, img.height);
+                var dx = audio.height/2/3;
+                var dsize = audio.height - 2*dx;
+
+                $scope.backgroundCtx.drawImage(img, sx, sy, size, size, dx, dx, dsize, dsize);
+                $scope.backgroundCtx.restore();
+            };
+            img.src = url;
+        } else {
+            $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
+        }
+    };
+
+    $scope.toggleBackground = function() {
+        if($scope.showBackground){
+            if(localStorage.getItem('last_background')){
+                $scope.setBackgroundImage(localStorage.getItem('last_background'));
+            }
+        } else {
+            $scope.setBackgroundImage(null);
+        }
+        localStorage.setItem('show_background', $scope.showBackground);
     };
 
     $scope.scrollToCurrentTrack = function() {
@@ -257,6 +272,8 @@ app.controller('frequencyBars', function($scope) {
                 frequencyBarsScope.stoppedAt = localStorage.getItem('last_position') || 0;
             });
         }
+
+        $('.container-fluid').height(window.innerHeight);
 
         $scope.$foreground = $('#foreground');
         $scope.$background = $('#background');
