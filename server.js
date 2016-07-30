@@ -9,7 +9,7 @@ app.use(express.static('public'));
 
 var ytInfos = {};
 
-app.get('/yt/:id/info', function(req, res) {Re
+app.get('/yt/:id/info', function(req, res) {
     if(ytInfos[req.params.id] && !req.query.reload){
         console.log('Using extracted info from YT for:', req.params.id);
         return res.json(ytInfos[req.params.id]);
