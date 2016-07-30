@@ -41,8 +41,8 @@ app.controller('frequencyBars', function($scope) {
             audio.loadBuffer(track.url, function() {
                 audio.play();
             });
+            $scope.storePlaylist();
         });
-        $scope.storePlaylist();
         audio.stop();
 
         setTimeout(function(){ $scope.scrollToCurrentTrack(); }, 100);
@@ -62,6 +62,7 @@ app.controller('frequencyBars', function($scope) {
     $scope.addToPlaylistFromURL = function(url) {
         var track = new Track({url: url}, $scope);
         $scope.playlist.push(track);
+        localStorage.removeItem('last_playlist');
         $scope.storePlaylist();
     };
 
@@ -73,24 +74,28 @@ app.controller('frequencyBars', function($scope) {
     $scope.addToPlaylistFromYT = function(link) {
         var track = new Track({youtube: {link: link}}, $scope);
         $scope.playlist.push(track);
+        localStorage.removeItem('last_playlist');
         $scope.storePlaylist();
     };
 
     $scope.addYTPlaylist = function(link) {
-        var playlistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch(?:.+?)|playlist\?)list=([\-A-Za-z\d]+)/;
+        var playlistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch(?:.+?)|playlist\?)list=([\-_A-Za-z\d]+)/;
         var playlistID = link.match(playlistRegex)[1];
         $.get('yt-playlist/'+playlistID+'/info').success(function(data) {
             _(data).each(function(trackInfo){
                 var track = new Track({youtube: {id: trackInfo.id, title: trackInfo.title}}, $scope);
-                track.onReady(function() { $scope.storePlaylist(); });
                 $scope.playlist.push(track);
             });
+            localStorage.removeItem('last_playlist');
+            $scope.storePlaylist();
+            $scope.$apply();
         });
     };
 
     $scope.removeFromPlaylist = function(track, $event) {
         var index = _($scope.playlist).indexOf(track);
         $scope.playlist.splice(index, 1);
+        localStorage.removeItem('last_playlist');
         $scope.storePlaylist();
 
         $event.stopPropagation();
@@ -123,7 +128,7 @@ app.controller('frequencyBars', function($scope) {
     };
 
     $scope.storePlaylist = function(name) {
-        localStorage.setItem(name || 'playlist', JSON.stringify(_($scope.playlist).map(function(track) {
+        localStorage.setItem(name || localStorage.getItem('last_playlist') || 'playlist', JSON.stringify(_($scope.playlist).map(function(track) {
             var json = track.toJSON();
             json.active = track == $scope.currentTrack;
             return json;
@@ -131,7 +136,7 @@ app.controller('frequencyBars', function($scope) {
     };
 
     $scope.restorePlaylist = function(name) {
-        var string = localStorage.getItem(name || 'playlist');
+        var string = localStorage.getItem(name || localStorage.getItem('last_playlist') || 'playlist');
         if(string.length > 2){
             _(JSON.parse(string)).each(function(options) {
                 var track = new Track(options, $scope);
@@ -152,6 +157,7 @@ app.controller('frequencyBars', function($scope) {
 
     $scope.clearPlaylist = function () {
         $scope.playlist = [];
+        localStorage.removeItem('last_playlist');
         $scope.storePlaylist();
     };
 
@@ -184,12 +190,14 @@ app.controller('frequencyBars', function($scope) {
         names.push('playlist-'+name);
         localStorage.setItem('playlist_names', JSON.stringify(_(names).uniq()));
         $scope.storePlaylist(_(names).last());
+        localStorage.setItem('last_playlist', _(names).last());
         $('#playlist_modal').modal('hide');
     };
 
     $scope.loadPlaylist = function(name) {
         $scope.playlist = [];
         $scope.restorePlaylist(name);
+        localStorage.setItem('last_playlist', name);
         $scope.playTrack($scope.playlist[0]);
         $('#playlist_modal').modal('hide');
     };

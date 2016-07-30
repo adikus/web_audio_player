@@ -13,14 +13,14 @@ Track.prototype.setupForYoutube = function(yt) {
 
     this.title = yt.title;
     this.uploader = yt.uploader;
-    this.url = yt.url;
+    this.url = 'yt/'+yt.id;
 
     if(yt.id){
         this.id = yt.id;
     }else{
         this.id = yt.link.match(this.yt_regex)[1];
     }
-    if(this.id && (!this.title || !this.uploader || !this.url)){
+    if(this.id && !this.title){
         console.log('Loading info for', this);
         this.loading = true;
         this.url = 'yt/'+this.id;
@@ -45,16 +45,30 @@ Track.prototype.setupForYoutube = function(yt) {
     }
 };
 
-Track.prototype.reload = function() {
+Track.prototype.reload = function(force, cb) {
     if(this.type == 'yt') {
+        if(force){
+            this.ngScope.$apply();
+        }
         this.loading = true;
-        this.ngScope.$apply();
 
         var self = this;
-        $.get('yt/'+this.id+'/info?reload=true').success(function() {
+        var query = force ? '?reload=true' : '';
+        $.get('yt/'+this.id+'/info'+query).success(function(data) {
+            if(data.error){
+                self.title = 'Unable to retrieve track';
+                self.error = true;
+            }else{
+                self.title = data.title;
+                self.uploader = data.uploader;
+                self.info = data;
+            }
             self.loading= false;
-            audio.reloaded = true;
-            audio.loadBuffer(self.url);
+            if(force){
+                audio.reloaded = true;
+                audio.loadBuffer(self.url);
+            }
+            if(cb)cb();
         });
     }
 };
@@ -67,7 +81,9 @@ Track.prototype.setupForURL = function(url) {
 };
 
 Track.prototype.onReady = function(cb) {
-    if(this.ready)cb();
+    if(this.ready){
+        this.reload(false, cb);
+    }
     this.ready_callback = cb;
 };
 
