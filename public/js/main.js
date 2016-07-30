@@ -11,6 +11,7 @@ app.controller('frequencyBars', function($scope) {
     $scope.stopAfterCurrent = localStorage.getItem('stopAfterCurrent') == 'true';
     $scope.loopPlaylist = localStorage.getItem('loopPlaylist') == 'true';
     $scope.showBackground = localStorage.getItem('show_background') ? localStorage.getItem('show_background') == 'true' : true;
+    $scope.pauseOnUnfocus = localStorage.getItem('pause_unfocus') ? localStorage.getItem('pause_unfocus') == 'true' : true;
 
     $scope.playPause = function() { audio.playPause() };
 
@@ -260,6 +261,10 @@ app.controller('frequencyBars', function($scope) {
         }).value();
 
         $event.stopPropagation();
+    };
+
+    $scope.togglepauseOnUnfocus = function() {
+        localStorage.setItem('pause_unfocus', $scope.pauseOnUnfocus);
     };
 
     $scope.playlist = [];

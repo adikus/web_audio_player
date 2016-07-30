@@ -191,7 +191,7 @@ Audio.prototype.process = function(currentDelta, force) {
         return;
     }
 
-    if(document.hidden || (this.gui.stopOnLoseFocus && !document.hasFocus())){
+    if(document.hidden || (this.gui.pauseOnUnfocus && !document.hasFocus())){
         return;
     }
 

@@ -24,10 +24,13 @@
 <body>
     <audio></audio>
     <div class="container-fluid" ng-app="audioVisual" ng-controller="frequencyBars">
+        <!-- Canvases -->
         <div class="canvas-container">
             <canvas id="background"></canvas>
             <canvas id="foreground"></canvas>
         </div>
+
+        <!-- UI -->
         <div class="audio-visual-controls text-center" ng-cloak ng-style="controls.containerStyle">
             <div class="btn-group" role="group" ng-style="controls.buttonGroupStyle">
                 <button type="button" class="btn btn-default btn-lg" ng-click="playPrevious()">
@@ -51,6 +54,7 @@
                 </strong>
             </div>
 
+            <!-- Input controls -->
             <div class="inputs text-left">
                 <div class="form-inline">
                     <input class="form-control" type="text" ng-model="url" name="file_url" placeholder="'Local' Audio URL">
@@ -68,14 +72,22 @@
                 </div>
             </div>
 
-            <div class="footer-controls">
+            <!-- Footer controls -->
+            <div class="footer-controls form-inline">
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" ng-model="showBackground" ng-change="toggleBackground()"> Show YouTube Thumbnails
                     </label>
                 </div>
+                |
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="pauseOnUnfocus" ng-change="togglepauseOnUnfocus()"> Pause visualization when unfocused
+                    </label>
+                </div>
             </div>
 
+            <!-- Playlist -->
             <div class="playlist text-left panel panel-default">
                 <div class="panel-heading">
                     <div class="dropdown">
