@@ -1,0 +1,26 @@
+{
+  "name": "web-audio-frequency",
+  "version": "0.1.0",
+  "description": "Web Audio Frequency Visualiser",
+  "engines": {
+    "node": "0.12.6"
+  },
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.14.0",
+    "lodash": "4.13.1",
+    "request": "2.72.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adikus/web_audio_player"
+  },
+  "keywords": [
+    "node",
+    "webaudio"
+  ],
+  "license": "MIT"
+}

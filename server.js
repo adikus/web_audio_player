@@ -20,7 +20,7 @@ function retrieveTrackInfo(id, reload, cb) {
         console.log('Extracting from YT for:', id);
     }
 
-    exec('youtube-dl  -j -- ' + id , function (error, stdout, stderr){
+    exec('lib/youtube-dl  -j -- ' + id , function (error, stdout, stderr){
         if(stdout.length > 2){
             var info = JSON.parse(stdout);
             var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
@@ -41,7 +41,7 @@ app.get('/yt/:id/info', function(req, res) {
 
 app.get('/yt-playlist/:id/info', function(req, res) {
     console.log('Extracting from YT for playlist:', req.params.id);
-    exec('youtube-dl  -j --flat-playlist -- ' + req.params.id , function callback(error, stdout){
+    exec('lib/youtube-dl  -j --flat-playlist -- ' + req.params.id, function (error, stdout){
         var info = JSON.parse('[' + stdout.slice(0, -1).split('\n').join(',') + ']');
         res.json(info);
     });
@@ -62,6 +62,18 @@ app.get('/yt/:id', function (req, res) {
     });
 });
 
-app.listen(3001, function () {
-    console.log('Example app listening on port 3001!');
+exec('curl -L https://yt-dl.org/downloads/latest/youtube-dl -o lib/youtube-dl', function (error, stdout, stderror){
+    if(!error){
+        exec('chmod a+rx lib/youtube-dl', function (error, stdout, stderror){
+           if(!error){
+               app.listen((process.env.PORT || 3001), function () {
+                   console.log('Example app listening on port 3001!');
+               });
+           } else {
+               console.log(stdout, stderror)
+           }
+        });
+    } else {
+        console.log(stdout, stderror)
+    }
 });
