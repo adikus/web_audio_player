@@ -49,8 +49,11 @@ app.controller('frequencyBars', function($scope) {
     };
 
     $scope.scrollToCurrentTrack = function() {
-        $('.playlist .list-group').animate({
-            scrollTop: $('.playlist .list-group-item.active').offset().top + $('.playlist .list-group').scrollTop() - 75
+        var $listGroup = $('.playlist .list-group');
+        var $activeItem = $('.playlist .list-group-item.active');
+        if($activeItem.length == 0)return;
+        $listGroup.animate({
+            scrollTop: $activeItem.offset().top + $listGroup.scrollTop() - 75
         }, 500);
     };
 
@@ -137,7 +140,7 @@ app.controller('frequencyBars', function($scope) {
 
     $scope.restorePlaylist = function(name) {
         var string = localStorage.getItem(name || localStorage.getItem('last_playlist') || 'playlist');
-        if(string.length > 2){
+        if(string && string.length > 2){
             _(JSON.parse(string)).each(function(options) {
                 var track = new Track(options, $scope);
                 if(options.active){
@@ -145,9 +148,9 @@ app.controller('frequencyBars', function($scope) {
                 }
                 $scope.playlist.push(track);
             });
-        }
 
-        setTimeout(function(){ $scope.scrollToCurrentTrack(); }, 500);
+            setTimeout(function(){ $scope.scrollToCurrentTrack(); }, 500);
+        }
     };
 
     $scope.reversePlaylist = function () {
@@ -218,16 +221,19 @@ app.controller('frequencyBars', function($scope) {
 
     $(function(){
         window.audio = new Audio($('audio'), $('canvas'), $scope);
-        audio.loadBuffer(localStorage.getItem('last_played') || 'audio/panzer_vor.mp3', function() {
-            audio.tag.currentTime = localStorage.getItem('last_position') || 0;
-            frequencyBarsScope.stoppedAt = localStorage.getItem('last_position') || 0;
-        });
+        if(localStorage.getItem('last_played')){
+            audio.loadBuffer(localStorage.getItem('last_played'), function() {
+                audio.tag.currentTime = localStorage.getItem('last_position') || 0;
+                frequencyBarsScope.stoppedAt = localStorage.getItem('last_position') || 0;
+            });
+        }
 
         $scope.controls.buttonGroupStyle = {
             'margin-top': audio.height/2 - 20
         };
 
         $scope.restorePlaylist();
+        $scope.$apply();
 
         $('.audio-visual-controls .playlist .list-group').attr('style', 'max-height: '+ (window.innerHeight - 100) +'px;');
 

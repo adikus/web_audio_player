@@ -29,7 +29,7 @@ Audio.prototype.setupAudio = function($audio) {
 
     var self = this;
     this.tag.addEventListener("error", function(e) {
-        if(e.currentTarget.error.code == 4 && !self.reloaded){
+        if(e.currentTarget.error.code == 4 && !self.reloaded && self.gui.currentTrack){
             self.gui.currentTrack.reload(true);
         }
     });
