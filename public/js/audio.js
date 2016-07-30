@@ -49,7 +49,7 @@ Audio.prototype.setupAudio = function($audio) {
 
     this.tag.onended = function() {
         self.gui.playing = false;
-        if(self.gui.playingFromPlaylist()){
+        if(self.gui.playingFromPlaylist() && !self.gui.stopAfterCurrent){
             if(!self.gui.playNext())self.tag.currentTime = 0;
         }else{
             self.tag.currentTime = 0;

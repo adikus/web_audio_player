@@ -8,6 +8,9 @@ app.controller('frequencyBars', function($scope) {
     $scope.loading = false;
     $scope.controls = {containerStyle: '', buttonGroupStyle: ''};
 
+    $scope.stopAfterCurrent = localStorage.getItem('stopAfterCurrent') == 'true';
+    $scope.loopPlaylist = localStorage.getItem('loopPlaylist') == 'true';
+
     $scope.playPause = function() { audio.playPause() };
 
     $scope.formatTime = function(n) {
@@ -76,7 +79,13 @@ app.controller('frequencyBars', function($scope) {
 
     $scope.playNext = function() {
         var index = _($scope.playlist).indexOf($scope.currentTrack);
-        if(index + 1 >= $scope.playlist.length)return false;
+        if(index + 1 >= $scope.playlist.length){
+            if($scope.loopPlaylist){
+                index = -1;
+            }else{
+                return false;
+            }
+        }
 
         $scope.playTrack($scope.playlist[index + 1]);
         return true;
@@ -111,6 +120,21 @@ app.controller('frequencyBars', function($scope) {
         }
     };
 
+    $scope.reversePlaylist = function () {
+        $scope.playlist = $scope.playlist.reverse();
+        $scope.storePlaylist();
+    };
+
+    $scope.toggleStopAfterCurrent = function() {
+        $scope.stopAfterCurrent = !$scope.stopAfterCurrent;
+        localStorage.setItem('stopAfterCurrent', $scope.stopAfterCurrent);
+    };
+
+    $scope.toggleLoopPlaylist = function() {
+        $scope.loopPlaylist = !$scope.loopPlaylist;
+        localStorage.setItem('loopPlaylist', $scope.loopPlaylist);
+    };
+
     $scope.playlist = [];
 
     $(function(){
@@ -125,6 +149,10 @@ app.controller('frequencyBars', function($scope) {
         };
 
         $scope.restorePlaylist();
+
+        $('.audio-visual-controls .playlist .list-group').attr('style', 'max-height: '+ (window.innerHeight - 100) +'px;');
+
+        $('[data-toggle="tooltip"]').tooltip();
 
         $scope.slider = $('#current_time_slider');
         $scope.slider.width(audio.height/3);

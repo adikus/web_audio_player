@@ -30,6 +30,18 @@ body {
     cursor: pointer;
 }
 
+.audio-visual-controls .playlist .list-group {
+    overflow-y: scroll;
+}
+
+.audio-visual-controls .playlist .panel-heading {
+    line-height: 34px;
+}
+
+.audio-visual-controls .playlist .panel-heading a {
+    text-decoration: none;
+}
+
 .audio-visual-controls  .slider-selection {
     background: #B0EBFF;
 }
