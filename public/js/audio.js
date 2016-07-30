@@ -27,6 +27,13 @@ Audio.prototype.analysers = {};
 Audio.prototype.setupAudio = function($audio) {
     this.tag = $audio[0];
 
+    var self = this;
+    this.tag.addEventListener("error", function(e) {
+        if(e.currentTarget.error.code == 4 && !self.reloaded){
+            self.gui.currentTrack.reload();
+        }
+    });
+
     this.context = new AudioContext();
     this.sourceNode = this.context.createMediaElementSource(this.tag);
 
@@ -40,7 +47,6 @@ Audio.prototype.setupAudio = function($audio) {
     this.sourceNode.connect(this.splitter);
     this.sourceNode.connect(this.context.destination);
 
-    var self = this;
     this.tag.onended = function() {
         self.gui.playing = false;
         if(self.gui.playingFromPlaylist()){
@@ -84,6 +90,7 @@ Audio.prototype.loadBuffer = function(filename, cb) {
     this.gui.loading = true;
     this.tag.oncanplay = function() {
         self.gui.loading = false;
+        self.reloaded = false;
         console.log(filename, 'loaded.');
         localStorage.setItem('last_played', filename);
 

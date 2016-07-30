@@ -33,6 +33,20 @@ Track.prototype.setupForYoutube = function(yt) {
     }
 };
 
+Track.prototype.reload = function() {
+    if(this.type == 'yt') {
+        this.loading = true;
+        this.ngScope.$apply();
+
+        var self = this;
+        $.get('yt/'+this.id+'/info?reload=true').success(function(data) {
+            self.loading= false;
+            audio.reloaded = true;
+            audio.loadBuffer(self.url);
+        });
+    }
+};
+
 Track.prototype.setupForURL = function(url) {
     this.type = 'url';
     this.url = url;

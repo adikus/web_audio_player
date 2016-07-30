@@ -9,13 +9,16 @@ app.use(express.static('public'));
 
 var ytInfos = {};
 
-app.get('/yt/:id/info', function(req, res) {
-    if(ytInfos[req.params.id]){
+app.get('/yt/:id/info', function(req, res) {Re
+    if(ytInfos[req.params.id] && !req.query.reload){
         console.log('Using extracted info from YT for:', req.params.id);
         return res.json(ytInfos[req.params.id]);
     }
-
-    console.log('Extracting from YT for:', req.params.id);
+    if(req.query.reload){
+        console.log('Re-Extracting from YT for:', req.params.id);
+    }else{
+        console.log('Extracting from YT for:', req.params.id);
+    }
     exec('youtube-dl  -j -- ' + req.params.id , function callback(error, stdout){
         var info = JSON.parse(stdout);
         var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
