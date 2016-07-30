@@ -9,6 +9,20 @@ app.use(express.static('public'));
 
 var ytInfos = {};
 
+function thumbnailImage(url, cb) {
+    if(url.indexOf('maxres') > -1)return cb(url);
+    var newurl = url.replace('/default', '/maxresdefault');
+    newurl = newurl.replace('/hqdefault', '/maxresdefault');
+    request(newurl, function(error, response){
+        if(response.statusCode != 200){
+            newurl = url.replace('/default', '/hqdefault');
+            cb(newurl);
+        }else{
+            cb(newurl);
+        }
+    });
+}
+
 function retrieveTrackInfo(id, reload, cb) {
     if(ytInfos[id] && !reload){
         console.log('Using extracted info from YT for:', id);
@@ -24,14 +38,16 @@ function retrieveTrackInfo(id, reload, cb) {
         if(stdout.length > 2){
             var info = JSON.parse(stdout);
             var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
-            filteredInfo.thumbnail = filteredInfo.thumbnail.replace('/default', '/maxresdefault');
-            filteredInfo.thumbnail = filteredInfo.thumbnail.replace('/hqdefault', '/maxresdefault');
-            ytInfos[filteredInfo.id] = filteredInfo;
-            filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
+            thumbnailImage(filteredInfo.thumbnail, function(url) {
+                filteredInfo.thumbnail = url;
+                ytInfos[filteredInfo.id] = filteredInfo;
+                filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
+                cb(ytInfos[id]);
+            });
         }else{
             ytInfos[id] = {error: stderr};
+            cb(ytInfos[id]);
         }
-        cb(ytInfos[id]);
     });
 }
 
