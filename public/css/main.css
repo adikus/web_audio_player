@@ -50,6 +50,7 @@ canvas {
 
 .audio-visual-controls .playlist .list-group {
     overflow-y: scroll;
+    font-size: 0.8em;
 }
 
 .audio-visual-controls .playlist .panel-heading {
