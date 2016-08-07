@@ -70,6 +70,8 @@ Track.prototype.reload = function(force, cb) {
             }
             if(cb)cb();
         });
+    } else {
+        cb();
     }
 };
 
