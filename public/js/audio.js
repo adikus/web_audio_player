@@ -141,23 +141,27 @@ Audio.prototype.assignBarValues = function(array, start, scale, side, bars) {
     var self = this;
     var barValues = this.getScaledValues(array, start, scale, side, bars.length, function(v) { return v; });
     var colorValues = this.getScaledValues(array, start, scale, side, bars.length, function(v, i) {
-        self.saveHistory(side, start + i, v);
-        return Math.abs(v - _(self.history[side][start + i]).mean());
+        self.saveHistory(side, start + i, v, 2);
+        return _([0.25, 0.5, 1, 2]).chain().map(function(n){
+            return Math.max(0.1, v - _(self.history[side][start + i].slice(0, self.targetFPS*n)).mean());
+        }).mean().value();
     });
 
     var average = _(barValues).mean();
-    var averageColor = _(colorValues).mean();
+    this.saveHistory(side, 'average-'+start, average, 2);
+    var windowedAverage = _(this.history[side]['average-'+start]).mean();
+    var maxColor = Math.max(_(colorValues).max(), 20);
 
     _(bars).each(function(bar, i){
-        bar.r = 1 + Math.max(0, barValues[i] - average/1.1)/5.0;
+        bar.r = 1 + Math.max(0, barValues[i] - (windowedAverage+average)/2.2)/5.0;
         bar.w = 0.25 + average/100;
-        self.drawBar(bar, colorValues[i] - averageColor/1.1);
+        self.drawBar(bar, colorValues[i]/maxColor*40);
     });
 };
 
 Audio.prototype.getScaledValues = function(array, start, scale, side, length, cb) {
     if(scale == 1){
-        return array.slice(start, start + length * scale).map(function(v, i) { return cb(v, i) });
+        return _(array.slice(start, start + length * scale)).map(function(v, i) { return cb(v, i); }).value();
     }else{
         return _(array.slice(start, start + length * scale)).map(function(v, i) {
             return [cb(v, i), i]
@@ -169,10 +173,10 @@ Audio.prototype.getScaledValues = function(array, start, scale, side, length, cb
     }
 };
 
-Audio.prototype.saveHistory = function(side, i, value) {
+Audio.prototype.saveHistory = function(side, i, value, targetTime) {
     if(!this.history[side][i])this.history[side][i] = [];
     this.history[side][i].push(value);
-    if(this.history[side][i].length > this.targetFPS/2)this.history[side][i].shift();
+    if(this.history[side][i].length > this.targetFPS*targetTime)this.history[side][i].shift();
 };
 
 Audio.prototype.requestAnimationFrame = function() {
