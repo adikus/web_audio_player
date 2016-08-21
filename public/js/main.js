@@ -345,5 +345,8 @@ app.controller('frequencyBars', function($scope, $sce) {
             $scope.$apply();
         });
 
+        $.get('yt/api_key', function(key) {
+            $scope.yt_api_key = key;
+        });
     });
 });

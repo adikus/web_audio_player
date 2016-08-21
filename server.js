@@ -68,6 +68,10 @@ app.get('/yt/:id/info', function(req, res) {
     });
 });
 
+app.get('/yt/api_key', function(req, res) {
+    res.send(process.env.YT_API_KEY)
+});
+
 app.get('/yt-playlist/:id/info', function(req, res) {
     console.log('Extracting from YT for playlist:', req.params.id);
     exec('lib/youtube-dl  -j --flat-playlist -- ' + req.params.id, function (error, stdout){
