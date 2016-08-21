@@ -29,9 +29,7 @@ Audio.prototype.setupAudio = function($audio) {
 
     var self = this;
     this.tag.addEventListener("error", function(e) {
-        if(e.currentTarget.error.code == 4 && !self.reloaded && self.gui.currentTrack){
-            self.gui.currentTrack.reload(true);
-        }
+        console.log('Error when loading track', e);
     });
 
     this.context = new AudioContext();
@@ -90,7 +88,6 @@ Audio.prototype.loadBuffer = function(filename, cb) {
     this.gui.loading = true;
     this.tag.oncanplay = function() {
         self.gui.loading = false;
-        self.reloaded = false;
         console.log(filename, 'loaded.');
         localStorage.setItem('last_played', filename);
 
