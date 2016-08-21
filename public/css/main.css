@@ -35,6 +35,16 @@ canvas {
     left: 20px;
 }
 
+.audio-visual-controls .track-info {
+    position: absolute;
+    bottom: 50px;
+    left: 20px;
+}
+
+.audio-visual-controls .track-info .panel-body {
+    overflow-y: scroll;
+}
+
 .audio-visual-controls .footer-controls {
     position: absolute;
     bottom: 20px;
@@ -45,7 +55,6 @@ canvas {
     position: absolute;
     top: 20px;
     right: 20px;
-    width: 250px;
 }
 
 .audio-visual-controls .playlist .list-group {

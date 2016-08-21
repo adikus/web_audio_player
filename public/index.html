@@ -72,6 +72,25 @@
                 </div>
             </div>
 
+            <!-- Currently playing -->
+            <div class="track-info">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <strong>
+                            <span ng-visible="currentPlaylist">
+                                [{{currentPlaylist}}]
+                            </span>
+                            {{currentTrack.title}}
+                        </strong>
+                    </div>
+                    <div class="text-left panel-body">
+                        <strong>Uploader: {{currentTrack.uploader}}</strong>
+                        <br><br>
+                        <div ng-bind-html="htmlSafe(currentTrack.description)"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Footer controls -->
             <div class="footer-controls form-inline">
                 <div class="checkbox">
@@ -177,6 +196,7 @@
     <script src="js/bootstrap-slider.js"></script>
 
     <script src="js/angular.js"></script>
+    <script src="js/angular-sanitize.js"></script>
     <script src="js/angular-sortable-view.js"></script>
 
     <script src="js/audio.js"></script>

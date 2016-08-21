@@ -1,6 +1,6 @@
-var app = angular.module('audioVisual', ['angular-sortable-view']);
+var app = angular.module('audioVisual', ['ngSanitize', 'angular-sortable-view']);
 
-app.controller('frequencyBars', function($scope) {
+app.controller('frequencyBars', function($scope, $sce) {
     window.frequencyBarsScope = $scope;
 
     $scope.playing = false;
@@ -188,7 +188,9 @@ app.controller('frequencyBars', function($scope) {
     };
 
     $scope.storePlaylist = function(name) {
-        localStorage.setItem(name || localStorage.getItem('last_playlist') || 'playlist', JSON.stringify(_($scope.playlist).map(function(track) {
+        name = name || localStorage.getItem('last_playlist') || 'playlist';
+        $scope.currentPlaylist = name.split('-').slice(1).join('-');
+        localStorage.setItem(name, JSON.stringify(_($scope.playlist).map(function(track) {
             var json = track.toJSON();
             json.active = track == $scope.currentTrack;
             return json;
@@ -196,7 +198,9 @@ app.controller('frequencyBars', function($scope) {
     };
 
     $scope.restorePlaylist = function(name) {
-        var string = localStorage.getItem(name || localStorage.getItem('last_playlist') || 'playlist');
+        name = name || localStorage.getItem('last_playlist') || 'playlist';
+        $scope.currentPlaylist = name.split('-').slice(1).join('-');
+        var string = localStorage.getItem(name);
         if(string && string.length > 2){
             _(JSON.parse(string)).each(function(options) {
                 var track = new Track(options, $scope);
@@ -218,6 +222,7 @@ app.controller('frequencyBars', function($scope) {
     $scope.clearPlaylist = function () {
         $scope.playlist = [];
         localStorage.removeItem('last_playlist');
+        $scope.currentPlaylist = false;
         $scope.storePlaylist();
     };
 
@@ -278,6 +283,10 @@ app.controller('frequencyBars', function($scope) {
         localStorage.setItem('pause_unfocus', $scope.pauseOnUnfocus);
     };
 
+    $scope.htmlSafe = function(string) {
+        return $sce.trustAsHtml(string);
+    };
+
     $scope.playlist = [];
 
     $(function(){
@@ -312,6 +321,9 @@ app.controller('frequencyBars', function($scope) {
         $scope.restorePlaylist();
         $scope.$apply();
 
+        $('.audio-visual-controls .playlist').width((window.innerWidth-audio.height)/2);
+        $('.audio-visual-controls .track-info').width((window.innerWidth-audio.height)/2);
+        $('.audio-visual-controls .track-info .panel-body').height(window.innerHeight/2);
         $('.audio-visual-controls .playlist .list-group').attr('style', 'max-height: '+ (window.innerHeight - 100) +'px;');
 
         $('[data-toggle="tooltip"]').tooltip();

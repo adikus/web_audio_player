@@ -13,6 +13,7 @@ Track.prototype.setupForYoutube = function(yt) {
 
     this.title = yt.title;
     this.uploader = yt.uploader;
+    this.description = yt.description;
 
     if(yt.id){
         this.id = yt.id;
@@ -38,6 +39,7 @@ Track.prototype.loadYTInfo = function(cb) {
         }else{
             self.title = data.title;
             self.uploader = data.uploader;
+            self.description = data.description.replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1<br>$2');
             self.info = data;
         }
         self.loading= false;
@@ -69,6 +71,6 @@ Track.prototype.toJSON = function() {
     if(this.type == 'url'){
         return {url: this.url};
     }else if(this.type == 'yt'){
-        return {youtube: {id: this.id, title: this.title, uploader: this.uploader, url: this.url}};
+        return {youtube: {id: this.id, title: this.title, uploader: this.uploader, url: this.url, description: this.description}};
     }
 };
