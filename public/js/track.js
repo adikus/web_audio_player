@@ -20,7 +20,7 @@ Track.prototype.setupForYoutube = function(yt) {
     }else{
         this.id = yt.link.match(this.yt_regex)[1];
     }
-    this.url = 'yt/'+yt.id;
+    this.url = 'yt/'+this.id;
 
     if(this.id && !this.title){
         this.loadYTInfo();

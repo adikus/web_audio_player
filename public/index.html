@@ -73,11 +73,11 @@
             </div>
 
             <!-- Currently playing -->
-            <div class="track-info">
+            <div class="track-info" ng-show="currentTrack">
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <strong>
-                            <span ng-visible="currentPlaylist">
+                            <span ng-show="currentPlaylist">
                                 [{{currentPlaylist}}]
                             </span>
                             {{currentTrack.title}}
