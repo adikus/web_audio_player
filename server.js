@@ -39,7 +39,11 @@ function retrieveTrackInfo(id, reload, cb) {
         console.log('Extracting from YT for:', id);
     }
 
-    exec('lib/youtube-dl  -j -- ' + id , function (error, stdout, stderr){
+    var additionalParams = '';
+    if(process.env.USER == 'andrej'){
+        additionalParams = '-n --mark-watched';
+    }
+    exec('lib/youtube-dl '+additionalParams+' -j -- ' + id , function (error, stdout, stderr){
         if(stdout.length > 2){
             var info = JSON.parse(stdout);
             var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
