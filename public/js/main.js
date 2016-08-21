@@ -38,12 +38,13 @@ app.controller('frequencyBars', function($scope, $sce) {
 
     $scope.searchOnApi = function(search) {
         var match = false;
+        $scope.searchResults = [];
         if(match = search.match(Track.yt_regex)){
             $.get(
                 YT_API_URL+'/videos',
                 {key: $scope.yt_api_key, part: 'snippet', id: match[1]},
                 function (response) {
-                    $scope.searchResults = response.items;
+                    $scope.searchResults.push.apply($scope.searchResults, response.items);
                     $scope.$apply();
                     console.log(response);
                 }
@@ -55,7 +56,7 @@ app.controller('frequencyBars', function($scope, $sce) {
                 YT_API_URL+'/playlists',
                 {key: $scope.yt_api_key, part: 'id,snippet', id: match[1]},
                 function (response) {
-                    $scope.searchResults = response.items;
+                    $scope.searchResults.push.apply($scope.searchResults, response.items);
                     $scope.$apply();
                     console.log(response);
                 }
