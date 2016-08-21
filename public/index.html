@@ -57,18 +57,55 @@
             <!-- Input controls -->
             <div class="inputs text-left">
                 <div class="form-inline">
-                    <input class="form-control" type="text" ng-model="url" name="file_url" placeholder="'Local' Audio URL">
-                    <button class="btn btn-default" type="submit" ng-click="loadFromURL(url)">Play</button>
-                    <button class="btn btn-default" type="submit" ng-click="addToPlaylistFromURL(url)">Add to playlist</button>
+                    <input class="form-control" type="text" ng-model="search" name="search" placeholder="Search">
+                    <button class="btn btn-default" type="submit" ng-click="searchOnApi(search)">Search</button>
                 </div>
-                <div class="form-inline">
-                    <input class="form-control" type="text" ng-model="youtubeLink" name="youtube_url" placeholder="YouTube URL">
-                    <button class="btn btn-default" type="submit" ng-click="loadFromYT(youtubeLink)">Play</button>
-                    <button class="btn btn-default" type="submit" ng-click="addToPlaylistFromYT(youtubeLink)">Add to playlist</button>
-                </div>
-                <div class="form-inline">
-                    <input class="form-control" type="text" ng-model="youtubePlaylistLink" name="youtube_playlist_url" placeholder="YouTube Playlist URL">
-                    <button class="btn btn-default" type="submit" ng-click="addYTPlaylist(youtubePlaylistLink)">Add to playlist</button>
+
+                <div class="panel panel-default" ng-show="searchResults.length">
+                    <div class="panel-heading">
+                        <strong>Search results</strong>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item" ng-repeat="item in searchResults" ng-class="{active: (item.id.videoId || item.id) == currentTrack.id}">
+                            <div ng-show="(item.id.kind || item.kind)=='youtube#video'">
+                                <div class="btn-group pull-right">
+                                    <button type="button" class="btn btn-default" ng-click="playItem(item)">Play</button>
+                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a ng-click="playItem(item)">Play</a></li>
+                                        <li><a ng-click="addItemToPlaylist(item)">Add to playlist</a></li>
+                                    </ul>
+                                </div>
+                                {{item.snippet.title}}
+                                <br>
+                                <small>
+                                    <strong>{{item.snippet.channelTitle}}</strong> | {{item.id.videoId || item.id}}
+                                </small>
+                            </div>
+                            <div ng-show="item.id.kind=='youtube#channel'">
+                                <strong>Channel:</strong> {{item.snippet.title}}
+                            </div>
+                            <div ng-show="(item.id.kind || item.kind)=='youtube#playlist'">
+                                <div class="btn-group pull-right">
+                                    <button type="button" class="btn btn-default" ng-click="playItem(item)">Play</button>
+                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a ng-click="playItem(item)">Play</a></li>
+                                        <li><a ng-click="addItemToPlaylist(item)">Add to playlist</a></li>
+                                    </ul>
+                                </div>
+                                <strong>Playlist:</strong> {{item.snippet.title}}
+                                <br>
+                                <small>
+                                    <strong>{{item.snippet.channelTitle}}</strong> | {{item.id.playlistId || item.id}}
+                                </small>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
 

@@ -7,7 +7,7 @@ Track = function(options, $scope) {
     }
 };
 
-Track.prototype.yt_regex = /(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/watch\?(?:.*?&(?:amp;)?)?v=|\.be\/)([\w\-]+)(?:&(?:amp;)?[\w\?=]*)?/;
+Track.yt_regex = /(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/watch\?(?:.*?&(?:amp;)?)?v=|\.be\/)([\w\-]+)(?:&(?:amp;)?[\w\?=]*)?/;
 Track.prototype.setupForYoutube = function(yt) {
     this.type = 'yt';
 
@@ -18,7 +18,7 @@ Track.prototype.setupForYoutube = function(yt) {
     if(yt.id){
         this.id = yt.id;
     }else{
-        this.id = yt.link.match(this.yt_regex)[1];
+        this.id = yt.link.match(Track.yt_regex)[1];
     }
     this.url = 'yt/'+this.id;
 

@@ -1,5 +1,7 @@
 var app = angular.module('audioVisual', ['ngSanitize', 'angular-sortable-view']);
 
+YT_API_URL = 'https://www.googleapis.com/youtube/v3';
+
 app.controller('frequencyBars', function($scope, $sce) {
     window.frequencyBarsScope = $scope;
 
@@ -31,6 +33,88 @@ app.controller('frequencyBars', function($scope, $sce) {
 
         if(!slider) {
             $scope.slider.slider('setValue', audio.tag.currentTime / audio.tag.duration * 1000);
+        }
+    };
+
+    $scope.searchOnApi = function(search) {
+        var match = false;
+        if(match = search.match(Track.yt_regex)){
+            $.get(
+                YT_API_URL+'/videos',
+                {key: $scope.yt_api_key, part: 'snippet', id: match[1]},
+                function (response) {
+                    $scope.searchResults = response.items;
+                    $scope.$apply();
+                    console.log(response);
+                }
+            );
+        }
+        var playlistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch(?:.+?)|playlist\?)list=([\-_A-Za-z\d]+)/;
+        if(match = search.match(playlistRegex)){
+            $.get(
+                YT_API_URL+'/playlists',
+                {key: $scope.yt_api_key, part: 'id,snippet', id: match[1]},
+                function (response) {
+                    $scope.searchResults = response.items;
+                    $scope.$apply();
+                    console.log(response);
+                }
+            );
+        }
+        if(!match){
+            $.get(
+                YT_API_URL+'/search',
+                {key: $scope.yt_api_key, part: 'snippet', q: search},
+                function (response) {
+                    $scope.searchResults = response.items;
+                    $scope.$apply();
+                    console.log(response);
+                }
+            );
+        }
+    };
+
+    $scope.playItem = function(item) {
+        var kind = item.id.kind || item.kind;
+        // TODO: use YT API to retrive this data
+        if(kind == 'youtube#video'){
+            var track = new Track({youtube: {id: item.id.videoId || item.id}}, $scope);
+            $scope.playTrack(track);
+        }else if(kind == 'youtube#playlist') {
+            $scope.clearPlaylist();
+            $.get('yt-playlist/'+(item.id.playlistId || item.id)+'/info').success(function(data) {
+                _(data).each(function(trackInfo){
+                    var track = new Track({youtube: {id: trackInfo.id, title: trackInfo.title}}, $scope);
+                    $scope.playlist.push(track);
+                });
+                localStorage.removeItem('last_playlist');
+                $scope.storePlaylist();
+                $scope.searchResults = [];
+                $scope.$apply();
+            });
+        }
+    };
+
+    $scope.addItemToPlaylist = function(item) {
+        var kind = item.id.kind || item.kind;
+        // TODO: use YT API to retrive this data
+        if(kind == 'youtube#video'){
+            var track = new Track({youtube: {id: item.id.videoId || item.id}}, $scope);
+            $scope.playlist.push(track);
+            localStorage.removeItem('last_playlist');
+            $scope.storePlaylist();
+            $scope.searchResults = [];
+        }else if(kind == 'youtube#playlist') {
+            $.get('yt-playlist/'+(item.id.playlistId || item.id)+'/info').success(function(data) {
+                _(data).each(function(trackInfo){
+                    var track = new Track({youtube: {id: trackInfo.id, title: trackInfo.title}}, $scope);
+                    $scope.playlist.push(track);
+                });
+                localStorage.removeItem('last_playlist');
+                $scope.storePlaylist();
+                $scope.searchResults = [];
+                $scope.$apply();
+            });
         }
     };
 
@@ -119,32 +203,6 @@ app.controller('frequencyBars', function($scope, $sce) {
         $scope.playlist.push(track);
         localStorage.removeItem('last_playlist');
         $scope.storePlaylist();
-    };
-
-    $scope.loadFromYT = function(link) {
-        var track = new Track({youtube: {link: link}}, $scope);
-        $scope.playTrack(track);
-    };
-
-    $scope.addToPlaylistFromYT = function(link) {
-        var track = new Track({youtube: {link: link}}, $scope);
-        $scope.playlist.push(track);
-        localStorage.removeItem('last_playlist');
-        $scope.storePlaylist();
-    };
-
-    $scope.addYTPlaylist = function(link) {
-        var playlistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch(?:.+?)|playlist\?)list=([\-_A-Za-z\d]+)/;
-        var playlistID = link.match(playlistRegex)[1];
-        $.get('yt-playlist/'+playlistID+'/info').success(function(data) {
-            _(data).each(function(trackInfo){
-                var track = new Track({youtube: {id: trackInfo.id, title: trackInfo.title}}, $scope);
-                $scope.playlist.push(track);
-            });
-            localStorage.removeItem('last_playlist');
-            $scope.storePlaylist();
-            $scope.$apply();
-        });
     };
 
     $scope.removeFromPlaylist = function(track, $event) {
@@ -296,6 +354,7 @@ app.controller('frequencyBars', function($scope, $sce) {
                 audio.tag.currentTime = localStorage.getItem('last_position') || 0;
                 $scope.stoppedAt = localStorage.getItem('last_position') || 0;
             });
+            audio.tag.currentTime = localStorage.getItem('last_position') || 0;
         }
 
         $('.container-fluid').height(window.innerHeight);
@@ -321,9 +380,10 @@ app.controller('frequencyBars', function($scope, $sce) {
         $scope.restorePlaylist();
         $scope.$apply();
 
+        $('.audio-visual-controls .inputs').width((window.innerWidth-audio.height)/2);
         $('.audio-visual-controls .playlist').width((window.innerWidth-audio.height)/2);
         $('.audio-visual-controls .track-info').width((window.innerWidth-audio.height)/2);
-        $('.audio-visual-controls .track-info .panel-body').height(window.innerHeight/2);
+        $('.audio-visual-controls .track-info .panel-body').height(window.innerHeight/4);
         $('.audio-visual-controls .playlist .list-group').attr('style', 'max-height: '+ (window.innerHeight - 100) +'px;');
 
         $('[data-toggle="tooltip"]').tooltip();
