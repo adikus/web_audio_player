@@ -80,18 +80,32 @@ app.get('/yt/:id', function (req, res) {
     });
 });
 
-exec('curl -L https://yt-dl.org/downloads/latest/youtube-dl -o lib/youtube-dl', function (error, stdout, stderror){
-    if(!error){
-        exec('chmod a+rx lib/youtube-dl', function (error, stdout, stderror){
-           if(!error){
-               app.listen((process.env.PORT || 3001), function () {
-                   console.log('Example app listening on port 3001!');
-               });
-           } else {
-               console.log(stdout, stderror)
-           }
-        });
-    } else {
-        console.log(stdout, stderror)
+var options = {
+    url: 'https://api.github.com/repos/rg3/youtube-dl/tags',
+    json: true,
+    headers: {
+        'User-Agent': 'web_audio_player'
     }
+};
+
+request.get(options, function (e, r, tags) {
+    var name = tags[0].name;
+    console.log('Downloading youtube-dl version', name)
+    exec('curl -L https://github.com/rg3/youtube-dl/releases/download/'+name+'/youtube-dl -o lib/youtube-dl', function (error, stdout, stderror){
+        if(!error){
+            console.log('youtube-dl binary successfully downloaded.');
+            exec('chmod a+rx lib/youtube-dl', function (error, stdout, stderror){
+                if(!error){
+                    console.log('Permissions on youtube-dl binary successfully set.');
+                    app.listen((process.env.PORT || 3001), function () {
+                        console.log('Example app listening on port 3001!');
+                    });
+                } else {
+                    console.log(stdout, stderror)
+                }
+            });
+        } else {
+            console.log(stdout, stderror)
+        }
+    });
 });
