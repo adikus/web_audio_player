@@ -23,9 +23,14 @@ function thumbnailImage(url, cb) {
     });
 }
 
+function isExpired(id) {
+    if(!ytInfos[id])return true;
+    return ytInfos[id].expiresAt.getTime() < (new Date()).getTime();
+}
+
 function retrieveTrackInfo(id, reload, cb) {
-    if(ytInfos[id] && !reload){
-        console.log('Using extracted info from YT for:', id);
+    if(!isExpired(id) && !reload){
+        console.log('Using extracted info from YT for:', id, 'expires at', ytInfos[id].expiresAt);
         return cb(ytInfos[id]);
     }
     if(reload){
@@ -38,10 +43,12 @@ function retrieveTrackInfo(id, reload, cb) {
         if(stdout.length > 2){
             var info = JSON.parse(stdout);
             var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
-            thumbnailImage(filteredInfo.thumbnail, function(url) {
-                filteredInfo.thumbnail = url;
+            thumbnailImage(filteredInfo.thumbnail, function(thumbnailUrl) {
+                filteredInfo.thumbnail = thumbnailUrl;
                 ytInfos[filteredInfo.id] = filteredInfo;
                 filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
+                var expiresTimestamp = url.parse(filteredInfo.url, true).query.expire;
+                filteredInfo.expiresAt = new Date(expiresTimestamp*1000);
                 cb(ytInfos[id]);
             });
         }else{
