@@ -42,6 +42,7 @@ app.controller('frequencyBars', function($scope) {
         track.onReady(function() {
             audio.loadBuffer(track.url, function() {
                 audio.play();
+                $scope.preloadNext();
             });
             if(track.info){
                 $scope.setBackgroundImage(track.info.thumbnail);
@@ -51,6 +52,11 @@ app.controller('frequencyBars', function($scope) {
         audio.stop();
 
         setTimeout(function(){ $scope.scrollToCurrentTrack(); }, 100);
+    };
+
+    $scope.preloadNext = function() {
+        var track = $scope.getNext();
+        if(track)track.reload();
     };
 
     $scope.setBackgroundImage = function(url) {
@@ -154,18 +160,23 @@ app.controller('frequencyBars', function($scope) {
         return _($scope.playlist).indexOf($scope.currentTrack) > -1;
     };
 
-    $scope.playNext = function() {
+    $scope.getNext = function() {
         var index = _($scope.playlist).indexOf($scope.currentTrack);
         if(index + 1 >= $scope.playlist.length){
             if($scope.loopPlaylist){
                 index = -1;
             }else{
-                return false;
+                return null;
             }
         }
 
-        $scope.playTrack($scope.playlist[index + 1]);
-        return true;
+        return $scope.playlist[index + 1];
+    };
+
+    $scope.playNext = function() {
+        var track = $scope.getNext();
+        $scope.playTrack(track);
+        return !!track;
     };
 
     $scope.playPrevious = function() {
@@ -274,7 +285,7 @@ app.controller('frequencyBars', function($scope) {
         if(localStorage.getItem('last_played')){
             audio.loadBuffer(localStorage.getItem('last_played'), function() {
                 audio.tag.currentTime = localStorage.getItem('last_position') || 0;
-                frequencyBarsScope.stoppedAt = localStorage.getItem('last_position') || 0;
+                $scope.stoppedAt = localStorage.getItem('last_position') || 0;
             });
         }
 
