@@ -109,10 +109,10 @@
                             <span class="glyphicon glyphicon-sort"></span>
                         </button>
                         <button class="btn btn-default" type="submit" ng-class="{active: stopAfterCurrent}" ng-click="toggleStopAfterCurrent()" data-toggle="tooltip" data-placement="left" data-delay="500" title="Stop after current">
-                            <span class="glyphicon glyphicon-ban-circle"></span>
+                            <span class="glyphicon glyphicon-ban-circle" ng-class="{'text-danger': stopAfterCurrent}"></span>
                         </button>
                         <button class="btn btn-default" type="submit" ng-class="{active: loopPlaylist}" ng-click="toggleLoopPlaylist()" data-toggle="tooltip" data-placement="left" data-delay="500" title="Loop">
-                            <span class="glyphicon glyphicon-refresh"></span>
+                            <span class="glyphicon glyphicon-refresh" ng-class="{'text-success': loopPlaylist}"></span>
                         </button>
                     </div>
                     <div class="clearfix"></div>
