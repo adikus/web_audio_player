@@ -32,6 +32,8 @@
 
         <!-- UI -->
         <div class="audio-visual-controls text-center" ng-cloak ng-style="controls.containerStyle">
+            <div class="fullscreen-trigger"><a ng-click="enterFullscreen($event)">Enter fullscreen</a></div>
+
             <div class="btn-group" role="group" ng-style="controls.buttonGroupStyle">
                 <button type="button" class="btn btn-default btn-lg" ng-click="playPrevious()">
                     <span class="glyphicon glyphicon-step-backward"></span>
@@ -184,6 +186,24 @@
                         </small>
                     </a>
                 </div>
+            </div>
+        </div>
+        <div class="hidden-gui">
+            <div class="progress" ng-style="{'background-size': progressBarBgSize + 'px 5px', width: currentProgress + '%'}"></div>
+            <div class="controls">
+                <a ng-click="playPrevious()">
+                    <span class="glyphicon glyphicon-step-backward"></span>
+                </a>
+                <span>{{currentMinutes + ' : ' + currentSeconds}}</span>
+                <a ng-disabled="loading" ng-click="playPause()">
+                    <span class="glyphicon glyphicon-play" ng-hide="playing || loading"></span>
+                    <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
+                    <span class="glyphicon glyphicon-option-horizontal" ng-show="loading"></span>
+                </a>
+                <span>{{totalMinutes + ' : ' + totalSeconds}}</span>
+                <a ng-click="playNext()">
+                    <span class="glyphicon glyphicon-step-forward"></span>
+                </a>
             </div>
         </div>
 

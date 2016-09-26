@@ -26,10 +26,11 @@ app.controller('frequencyBars', function($scope, $sce) {
         $scope.totalSeconds = $scope.formatTime(Math.floor(duration % 60));
     };
 
-    $scope.setCurrentTime = function (currentTime, slider) {
+    $scope.setCurrentTime = function (currentTime, duration, slider) {
         if($scope.sliding && !slider)return;
         $scope.currentMinutes = $scope.formatTime(Math.floor(currentTime / 60));
         $scope.currentSeconds = $scope.formatTime(Math.floor(currentTime % 60));
+        $scope.currentProgress = currentTime / duration * 100;
 
         if(!slider) {
             $scope.slider.slider('setValue', audio.tag.currentTime / audio.tag.duration * 1000);
@@ -148,7 +149,7 @@ app.controller('frequencyBars', function($scope, $sce) {
         if(url){
             localStorage.setItem('last_background', url);
             if(!$scope.showBackground)return;
-            var img = new Image();
+            var img = $scope.lastBgImg && $scope.lastBgImg.url == url ? $scope.lastBgImg : new Image();
             img.onload = function () {
                 $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
                 $scope.backgroundCtx.globalAlpha = 0.5;
@@ -169,6 +170,7 @@ app.controller('frequencyBars', function($scope, $sce) {
                 $scope.backgroundCtx.restore();
             };
             img.src = url;
+            $scope.lastBgImg = img;
         } else {
             $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
         }
@@ -338,6 +340,53 @@ app.controller('frequencyBars', function($scope, $sce) {
         $event.stopPropagation();
     };
 
+    $scope.resize = function() {$scope.$background.attr('width', $scope.$foreground.width());
+        window.audio.resize(Math.min(window.innerHeight, window.innerWidth - 400));
+
+        $scope.controls.buttonGroupStyle = {
+            'margin-top': audio.height/2 - 20
+        };
+
+        $('.container-fluid').height(window.innerHeight);
+
+        $scope.progressBarBgSize = window.innerWidth;
+
+        $('.audio-visual-controls .inputs').width((window.innerWidth-audio.height)/2);
+        $('.audio-visual-controls .playlist').width((window.innerWidth-audio.height)/2);
+        $('.audio-visual-controls .track-info').width((window.innerWidth-audio.height)/2);
+        $('.audio-visual-controls .track-info .panel-body').height(window.innerHeight/4);
+        $('.audio-visual-controls .playlist .list-group').attr('style', 'max-height: '+ (window.innerHeight - 100) +'px;');
+
+        $scope.slider.width(audio.height/3);
+
+        $scope.$background.attr('width', $scope.$foreground.width());
+        $scope.$background.attr('height', $scope.$foreground.height());
+        $scope.$background.width($scope.$foreground.width());
+        $scope.$background.height($scope.$foreground.height());
+        $scope.$background.attr('style', 'margin-left:' + Math.round(($('.container-fluid').width() - audio.height)/2) + 'px')
+
+        $scope.setBackgroundImage(localStorage.getItem('last_background'));
+
+        $scope.$apply();
+    };
+
+    $scope.enterFullscreen = function($event) {
+        $('body').addClass('dark hidden-gui');
+        $event.stopPropagation();
+        setTimeout(function(){
+            if($('body').hasClass('hidden-gui')) {
+                $('.audio-visual-controls').hide();
+            }
+        }, 2000);
+    };
+
+    $scope.stopFullscreen = function() {
+        $('.audio-visual-controls').show();
+        setTimeout(function(){
+            $('body').removeClass('dark hidden-gui');
+        }, 10);
+    };
+
     $scope.togglepauseOnUnfocus = function() {
         localStorage.setItem('pause_unfocus', $scope.pauseOnUnfocus);
     };
@@ -358,39 +407,24 @@ app.controller('frequencyBars', function($scope, $sce) {
             audio.tag.currentTime = localStorage.getItem('last_position') || 0;
         }
 
-        $('.container-fluid').height(window.innerHeight);
-
         $scope.$foreground = $('#foreground');
         $scope.$background = $('#background');
-        $scope.$background.attr('width', $scope.$foreground.width());
-        $scope.$background.attr('height', $scope.$foreground.height());
-        $scope.$background.attr('style', 'margin-left:' + Math.round($scope.$foreground.offset().left - $scope.$foreground.position().left) + 'px')
-        $scope.$background.width($scope.$foreground.width());
-        $scope.$background.height($scope.$foreground.height());
-
         $scope.backgroundCtx = $scope.$background[0].getContext("2d");
 
         if(localStorage.getItem('last_background')){
             $scope.setBackgroundImage(localStorage.getItem('last_background'));
         }
 
-        $scope.controls.buttonGroupStyle = {
-            'margin-top': audio.height/2 - 20
-        };
-
         $scope.restorePlaylist();
         $scope.$apply();
 
-        $('.audio-visual-controls .inputs').width((window.innerWidth-audio.height)/2);
-        $('.audio-visual-controls .playlist').width((window.innerWidth-audio.height)/2);
-        $('.audio-visual-controls .track-info').width((window.innerWidth-audio.height)/2);
-        $('.audio-visual-controls .track-info .panel-body').height(window.innerHeight/4);
-        $('.audio-visual-controls .playlist .list-group').attr('style', 'max-height: '+ (window.innerHeight - 100) +'px;');
+        $( window ).resize(function() {
+            $scope.resize();
+        });
 
         $('[data-toggle="tooltip"]').tooltip();
 
         $scope.slider = $('#current_time_slider');
-        $scope.slider.width(audio.height/3);
         $scope.slider.slider({
             value: 0,
             tooltip: 'hide'
@@ -399,15 +433,23 @@ app.controller('frequencyBars', function($scope, $sce) {
         }).on('slideStop', function(e) {
             $scope.sliding = false;
             audio.seek(audio.tag.duration*e.value/1000)
-            $scope.setCurrentTime(audio.tag.duration*e.value/1000, true);
+            $scope.setCurrentTime(audio.tag.duration*e.value/1000, audio.tag.duration, true);
             $scope.$apply();
         }).on('slide', function(e) {
-            $scope.setCurrentTime(audio.tag.duration*e.value/1000, true);
+            $scope.setCurrentTime(audio.tag.duration*e.value/1000, audio.tag.duration, true);
             $scope.$apply();
         });
+
+        $scope.resize();
 
         $.get('yt/api_key', function(key) {
             $scope.yt_api_key = key;
         });
+    });
+
+    $( "body" ).click(function ($event) {
+        if($(this).hasClass('hidden-gui') && !$.contains($('div.hidden-gui')[0], $event.toElement)){
+            $scope.stopFullscreen();
+        }
     });
 });

@@ -3,24 +3,27 @@ Audio = function($audio, $canvas, $scope) {
     this.setupAudio($audio);
 
     this.gui = $scope;
-
-    this.requestAnimationFrame();
 };
 
 Audio.prototype.setupCanvas = function($canvas) {
-    this.height = Math.min(window.innerHeight, window.innerWidth - 400);
-    $canvas.width(this.height);
-    $canvas.height(this.height);
-    $canvas.attr('width', this.height*2);
-    $canvas.attr('height', this.height*2);
+    this.$canvas = $canvas;
+    this.ctx = this.$canvas[0].getContext("2d");
+};
 
-    this.canvas = $canvas[0];
-    this.ctx = this.canvas.getContext("2d");
+Audio.prototype.resize = function(height) {
+    this.height = height;
+
+    this.$canvas.width(this.height);
+    this.$canvas.height(this.height);
+    this.$canvas.attr('width', this.height*2);
+    this.$canvas.attr('height', this.height*2);
 
     this.bars.leftInner = this.addBars(215, -1, 'left', 'inner');
     this.bars.rightInner = this.addBars(215, -1, 'right', 'inner');
     this.bars.leftOuter = this.addBars(325, 1, 'left', 'outer');
     this.bars.rightOuter = this.addBars(325, 1, 'right', 'outer');
+
+    this.process(this.prevDelta + 1000/this.targetFPS + 1, true);
 };
 
 Audio.prototype.analysers = {};
@@ -52,7 +55,7 @@ Audio.prototype.setupAudio = function($audio) {
         }else{
             self.tag.currentTime = 0;
         }
-        self.gui.setCurrentTime(0);
+        self.gui.setCurrentTime(0, 1);
         localStorage.setItem('last_position', 0);
         self.gui.$apply();
     };
@@ -219,8 +222,8 @@ Audio.prototype.process = function(currentDelta, force) {
 
     this.ctx.restore();
 
-    if(this.prevTime != Math.floor(this.tag.currentTime)){
-        this.gui.setCurrentTime(this.tag.currentTime);
+    if(this.prevTime != Math.floor(this.tag.currentTime) || $('body').hasClass('hidden-gui')){
+        this.gui.setCurrentTime(this.tag.currentTime, this.tag.duration);
         this.gui.$apply();
         this.prevTime = Math.floor(this.tag.currentTime);
     }
