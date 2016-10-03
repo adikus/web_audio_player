@@ -38,10 +38,10 @@
                 <button type="button" class="btn btn-default btn-lg" ng-click="playPrevious()">
                     <span class="glyphicon glyphicon-step-backward"></span>
                 </button>
-                <button type="button" class="btn btn-default btn-lg" ng-disabled="loading" ng-click="playPause()">
-                    <span class="glyphicon glyphicon-play" ng-hide="playing || loading"></span>
+                <button type="button" class="btn btn-default btn-lg" ng-disabled="isLoading()" ng-click="playPause()">
+                    <span class="glyphicon glyphicon-play" ng-hide="playing || isLoading()"></span>
                     <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
-                    <span class="loader" ng-show="loading"></span>
+                    <span class="loader" ng-show="isLoading()"></span>
                 </button>
                 <button type="button" class="btn btn-default btn-lg" ng-click="playNext()">
                     <span class="glyphicon glyphicon-step-forward"></span>
@@ -195,10 +195,10 @@
                     <span class="glyphicon glyphicon-step-backward"></span>
                 </a>
                 <span>{{currentMinutes + ' : ' + currentSeconds}}</span>
-                <a ng-disabled="loading" ng-click="playPause()">
-                    <span class="glyphicon glyphicon-play" ng-hide="playing || loading"></span>
+                <a ng-disabled="isLoading()" ng-click="playPause()">
+                    <span class="glyphicon glyphicon-play" ng-hide="playing || isLoading()"></span>
                     <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
-                    <span class="glyphicon glyphicon-option-horizontal" ng-show="loading"></span>
+                    <span class="glyphicon glyphicon-option-horizontal" ng-show="isLoading()"></span>
                 </a>
                 <span>{{totalMinutes + ' : ' + totalSeconds}}</span>
                 <a ng-click="playNext()">

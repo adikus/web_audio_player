@@ -1,6 +1,5 @@
 .DS_Store
 .idea
 bower_components
-public/audio
 node_modules
 lib/youtube-dl

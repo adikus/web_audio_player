@@ -191,7 +191,7 @@ Audio.prototype.prevDelta = 0;
 Audio.prototype.process = function(currentDelta, force) {
     this.requestAnimationFrame();
 
-    if(!force && !this.gui.playing){
+    if(!force && !this.gui.playing && this.tag.src.indexOf(SILENCE_URL) == -1){
         return;
     }
 

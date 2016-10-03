@@ -1,6 +1,7 @@
 var app = angular.module('audioVisual', ['ngSanitize', 'angular-sortable-view']);
 
 YT_API_URL = 'https://www.googleapis.com/youtube/v3';
+SILENCE_URL = 'audio/silence-10sec.mp3';
 
 app.controller('frequencyBars', function($scope, $sce) {
     window.frequencyBarsScope = $scope;
@@ -15,10 +16,12 @@ app.controller('frequencyBars', function($scope, $sce) {
     $scope.showBackground = localStorage.getItem('show_background') ? localStorage.getItem('show_background') == 'true' : true;
     $scope.pauseOnUnfocus = localStorage.getItem('pause_unfocus') ? localStorage.getItem('pause_unfocus') == 'true' : true;
 
+    $scope.isLoading = function() { return $scope.loading || ($scope.currentTrack && $scope.currentTrack.loading); };
+
     $scope.playPause = function() { audio.playPause() };
 
     $scope.formatTime = function(n) {
-        return ('0' + n).slice(-2);
+        return n > 99 ? ('0' + n).slice(-3) : ('0' + n).slice(-2);
     };
 
     $scope.setDuration = function (duration) {
@@ -122,11 +125,15 @@ app.controller('frequencyBars', function($scope, $sce) {
 
     $scope.playTrack = function(track) {
         $scope.currentTrack = track;
+        $scope.setBackgroundImage();
+        audio.tag.src = SILENCE_URL;
         if(track.error){
             return $scope.playNext();
         }
         track.onReady(function() {
+            if($scope.currentTrack != track)return;
             audio.loadBuffer(track.url, function() {
+                if($scope.currentTrack != track)return;
                 audio.play();
                 $scope.preloadNext();
             });
@@ -403,6 +410,7 @@ app.controller('frequencyBars', function($scope, $sce) {
             audio.loadBuffer(localStorage.getItem('last_played'), function() {
                 audio.tag.currentTime = localStorage.getItem('last_position') || 0;
                 $scope.stoppedAt = localStorage.getItem('last_position') || 0;
+                $scope.setCurrentTime(audio.tag.currentTime, audio.tag.duration, false);
             });
             audio.tag.currentTime = localStorage.getItem('last_position') || 0;
         }
