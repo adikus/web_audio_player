@@ -48,6 +48,10 @@ function retrieveTrackInfo(id, reload, cb) {
                 ytInfos[filteredInfo.id] = filteredInfo;
                 filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
                 var expiresTimestamp = url.parse(filteredInfo.url, true).query.expire;
+                if(!expiresTimestamp){
+                    var urlParts = filteredInfo.url.split('/');
+                    expiresTimestamp = urlParts[urlParts.indexOf('expire') + 1];
+                }
                 filteredInfo.expiresAt = new Date(expiresTimestamp*1000);
                 cb(ytInfos[id]);
             });
@@ -82,7 +86,7 @@ app.get('/yt-playlist/:id/info', function(req, res) {
 });
 
 function pipeYTVideo(url, req, res) {
-    console.log(req.headers.range);
+    console.log('Pipe YT video', req.params.id, req.headers.range);
     request.get({url: url.replace(/(\r\n|\n|\r)/gm,""), headers: {range: req.headers.range}}).pipe(res);
 }
 
