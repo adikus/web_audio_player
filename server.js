@@ -39,11 +39,7 @@ function retrieveTrackInfo(id, reload, cb) {
         console.log('Extracting from YT for:', id);
     }
 
-    var additionalParams = '';
-    if(process.env.USER == 'andrej'){
-        additionalParams = '-n --mark-watched';
-    }
-    exec('lib/youtube-dl '+additionalParams+' -j -- ' + id , function (error, stdout, stderr){
+    exec('lib/youtube-dl -j -- ' + id, {maxBuffer: 1024 * 1024}, function (error, stdout, stderr){
         if(stdout.length > 2){
             var info = JSON.parse(stdout);
             var filteredInfo = _(info).pick(['fulltitle', 'id', 'title', 'duration', 'description', 'uploader', 'thumbnail']).value();
@@ -79,7 +75,7 @@ app.get('/yt-playlist/:id/info', function(req, res) {
     if(process.env.USER == 'andrej'){
         additionalParams = '-n';
     }
-    exec('lib/youtube-dl ' + additionalParams + ' -j --flat-playlist -- ' + req.params.id, function (error, stdout){
+    exec('lib/youtube-dl ' + additionalParams + ' -j --flat-playlist -- ' + req.params.id, {maxBuffer: 1024 * 1024}, function (error, stdout){
         var info = JSON.parse('[' + stdout.slice(0, -1).split('\n').join(',') + ']');
         res.json(info);
     });
