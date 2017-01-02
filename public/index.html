@@ -22,7 +22,7 @@
     <![endif]-->
 </head>
 <body>
-    <audio></audio>
+    <audio crossorigin="anonymous"></audio>
     <div class="container-fluid" ng-app="audioVisual" ng-controller="frequencyBars">
         <!-- Canvases -->
         <div class="canvas-container">
@@ -157,6 +157,8 @@
                             <li><a ng-click="loadPlaylistModal()">Load</a></li>
                             <li role="separator" class="divider"></li>
                             <li><a ng-click="clearPlaylist()">Clear</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a ng-click="insertApiKey()">Insert API key</a></li>
                         </ul>
                     </div>
                     <strong>
@@ -181,7 +183,7 @@
                         <span class="loader" ng-show="track.type == 'yt' && track.loading"></span>
                         {{track.title}}
                         <br>
-                        <small ng-show="track.type == 'yt'">
+                        <small ng-show="track.type == 'yt' || track.type == 'api'">
                             <strong>{{track.uploader}}</strong> | {{track.id}}
                         </small>
                     </a>
@@ -209,7 +211,7 @@
 
         <!-- Playlist modal -->
         <div class="modal fade" id="playlist_modal" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-dialog modal-md" role="document">
                 <!-- Save playlist -->
                 <div class="modal-content" ng-show="playlistModalMode == 'save'">
                     <div class="modal-header">
@@ -233,12 +235,44 @@
                         <h4 class="modal-title">Load playlist</h4>
                     </div>
                     <div class="modal-body">
+                        <h5  ng-show="playlistNames.length">Local</h5>
+
                         <div class="list-group">
                             <a class="list-group-item" ng-repeat="name in playlistNames" ng-click="loadPlaylist('playlist-'+name)">
                                 <button class="btn btn-danger btn-xs pull-right" type="submit" ng-click="removePlaylist('playlist-'+name, $event)">x</button>
                                 {{name}}
                             </a>
                         </div>
+
+                        <h5 ng-show="apiPlaylists.length">API</h5>
+
+                        <div class="list-group">
+                            <a class="list-group-item" ng-repeat="playlist in apiPlaylists" ng-click="loadApiPlaylist(playlist)">
+                                <button class="btn btn-danger btn-xs pull-right" type="submit">x</button>
+                                {{playlist.title}}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API KEY modal -->
+        <div class="modal fade" id="api_key_modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-sm" role="document">
+                <!-- Save playlist -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        <h4 class="modal-title">Insert your API key</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <input type="text" class="form-control" ng-model="apiKey" name="api_key" placeholder="API key">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" ng-click="saveApiKey(apiKey)">Save</button>
                     </div>
                 </div>
             </div>

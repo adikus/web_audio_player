@@ -1,9 +1,13 @@
+S3_URL = 'http://yt-playlist.s3-eu-west-1.amazonaws.com/playlists/';
+
 Track = function(options, $scope) {
     this.ngScope = $scope;
     if (options.youtube){
         this.setupForYoutube(options.youtube);
     }else if (options.url) {
         this.setupForURL(options.url);
+    }if (options.api) {
+        this.setupForAPI(options.api);
     }
 };
 
@@ -25,6 +29,27 @@ Track.prototype.setupForYoutube = function(yt) {
     if(this.id && !this.title){
         this.loadYTInfo();
     }
+};
+
+Track.prototype.setupForAPI = function(item) {
+    this.type = 'api';
+
+    this.id = item.id;
+    this.title = item.title;
+    this.uploader = item.metadata.channelTitle;
+    this.description = '';
+    this.playlist_id = item.playlist_id;
+    this.item = item;
+    if(item.metadata.s3_mp3_file){
+        this.url = S3_URL + this.playlist_id + '/mp3/' + item.metadata.s3_mp3_file;
+    } else if(item.metadata.s3_file) {
+        this.url = S3_URL + this.playlist_id + '/' + item.metadata.s3_file;
+    }
+    var thumbnail = item.metadata.thumbnails.maxres || item.metadata.thumbnails.standard || item.metadata.thumbnails.high;
+    this.info = {thumbnail: thumbnail.url};
+
+    this.ready = true;
+    this.loading = false;
 };
 
 Track.prototype.loadYTInfo = function(cb) {
@@ -51,7 +76,7 @@ Track.prototype.loadYTInfo = function(cb) {
 Track.prototype.reload = function(cb) {
     if(this.type == 'yt') {
         this.loadYTInfo(cb);
-    } else {
+    } else if(cb) {
         cb();
     }
 };
@@ -72,5 +97,7 @@ Track.prototype.toJSON = function() {
         return {url: this.url};
     }else if(this.type == 'yt'){
         return {youtube: {id: this.id, title: this.title, uploader: this.uploader, url: this.url, description: this.description}};
+    }else if(this.type == 'api'){
+        return {api: this.item};
     }
 };

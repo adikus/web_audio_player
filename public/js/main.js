@@ -294,6 +294,20 @@ app.controller('frequencyBars', function($scope, $sce) {
         $scope.storePlaylist();
     };
 
+    $scope.insertApiKey = function() {
+        $('#api_key_modal').modal('toggle');
+    };
+
+    $scope.saveApiKey = function(apiKey) {
+        localStorage.setItem('api_key', apiKey);
+        $scope.apiKey = apiKey;
+        $.get('https://playlist.adikus.me/api/playlists', {apikey: $scope.apiKey}, function(response) {
+            $scope.apiPlaylists = response.playlists;
+            $scope.$apply();
+        }, 'json');
+        $('#api_key_modal').modal('hide');
+    };
+
     $scope.toggleStopAfterCurrent = function() {
         $scope.stopAfterCurrent = !$scope.stopAfterCurrent;
         localStorage.setItem('stopAfterCurrent', $scope.stopAfterCurrent);
@@ -332,6 +346,21 @@ app.controller('frequencyBars', function($scope, $sce) {
         $scope.restorePlaylist(name);
         localStorage.setItem('last_playlist', name);
         $scope.playTrack($scope.playlist[0]);
+        $('#playlist_modal').modal('hide');
+    };
+
+    $scope.loadApiPlaylist = function(playlist) {
+        $scope.clearPlaylist();
+
+        $.get('https://playlist.adikus.me/api/playlists/' + playlist.id, {apikey: $scope.apiKey}, function(response) {
+            _(response.items).each(function(item){
+                var track = new Track({api: item}, $scope);
+                $scope.playlist.push(track);
+            });
+            $scope.storePlaylist();
+            $scope.$apply();
+        }, 'json');
+
         $('#playlist_modal').modal('hide');
     };
 
@@ -405,6 +434,8 @@ app.controller('frequencyBars', function($scope, $sce) {
     $scope.playlist = [];
 
     $(function(){
+        $scope.slider = $('#current_time_slider');
+
         window.audio = new Audio($('audio'), $('#foreground'), $scope);
         if(localStorage.getItem('last_played')){
             audio.loadBuffer(localStorage.getItem('last_played'), function() {
@@ -423,6 +454,12 @@ app.controller('frequencyBars', function($scope, $sce) {
             $scope.setBackgroundImage(localStorage.getItem('last_background'));
         }
 
+        $scope.apiKey = localStorage.getItem('api_key');
+        $.get('https://playlist.adikus.me/api/playlists', {apikey: $scope.apiKey}, function(response) {
+            $scope.apiPlaylists = response.playlists;
+            $scope.$apply();
+        }, 'json');
+
         $scope.restorePlaylist();
         $scope.$apply();
 
@@ -432,7 +469,6 @@ app.controller('frequencyBars', function($scope, $sce) {
 
         $('[data-toggle="tooltip"]').tooltip();
 
-        $scope.slider = $('#current_time_slider');
         $scope.slider.slider({
             value: 0,
             tooltip: 'hide'
