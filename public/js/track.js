@@ -1,4 +1,4 @@
-S3_URL = 'http://yt-playlist.s3-eu-west-1.amazonaws.com/playlists/';
+S3_URL = 'https://yt-playlist.s3-eu-west-1.amazonaws.com/playlists/';
 
 Track = function(options, $scope) {
     this.ngScope = $scope;
