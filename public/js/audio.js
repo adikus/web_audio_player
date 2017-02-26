@@ -5,6 +5,9 @@ Audio = function($audio, $canvas, $scope) {
     this.gui = $scope;
 };
 
+Audio.prototype.targetFPS = 40;
+Audio.prototype.diffTimings = [0.25, 0.5, 1, 2];
+
 Audio.prototype.setupCanvas = function($canvas) {
     this.$canvas = $canvas;
     this.ctx = this.$canvas[0].getContext("2d");
@@ -22,6 +25,19 @@ Audio.prototype.resize = function(height) {
     this.bars.rightInner = this.addBars(215, -1, 'right', 'inner');
     this.bars.leftOuter = this.addBars(325, 1, 'left', 'outer');
     this.bars.rightOuter = this.addBars(325, 1, 'right', 'outer');
+
+    // Setup bar history
+    var self = this;
+    self.barHistory = {};
+    ['left', 'right'].forEach(function(side) {
+        self.barHistory[side] = {};
+        for(var i = 0; i < 215+325+1; i++){
+            self.barHistory[side][i] = {};
+            self.diffTimings.forEach(function(targetTime) {
+                self.barHistory[side][i][targetTime] = new CQueue(targetTime * self.targetFPS);
+            })
+        }
+    });
 
     this.process(this.prevDelta + 1000/this.targetFPS + 1, true);
 };
@@ -136,15 +152,35 @@ Audio.prototype.getFrequencyData = function(key) {
     return array;
 };
 
-Audio.prototype.history = {left: {}, right: {}};
+Audio.prototype.timings = {
+    assignBarValues: new CQueue(120),
+    process: new CQueue(120),
+    barValues: new CQueue(120),
+    colorValues: new CQueue(120),
+    averages: new CQueue(120),
+    drawBars: new CQueue(120)
+};
+
+Audio.prototype.debugTime = function(key, cb) {
+    var start = new Date();
+    cb.apply(this);
+    var end = new Date();
+    this.timings[key].add(end.getTime() - start.getTime());
+};
+
 Audio.prototype.assignBarValues = function(array, start, scale, side, bars) {
     var self = this;
+
     var barValues = this.getScaledValues(array, start, scale, side, bars.length, function(v) { return v; });
     var colorValues = this.getScaledValues(array, start, scale, side, bars.length, function(v, i) {
-        self.saveHistory(side, start + i, v, 2);
-        return _([0.25, 0.5, 1, 2]).chain().map(function(n){
-            return Math.max(0.1, v - _(self.history[side][start + i].slice(0, self.targetFPS*n)).mean());
-        }).mean().value();
+        self.saveBarHistory(side, start + i, v, 2);
+        var diffSum = 0;
+        for(var j = 0; j < self.diffTimings.length; j++){
+            var targetTime = self.diffTimings[j];
+            var queue = self.barHistory[side][start + i][targetTime];
+            diffSum += Math.max(0.1, v - queue.sum / queue.size)
+        }
+        return diffSum / self.diffTimings.length;
     });
 
     var average = _(barValues).mean();
@@ -161,7 +197,7 @@ Audio.prototype.assignBarValues = function(array, start, scale, side, bars) {
 
 Audio.prototype.getScaledValues = function(array, start, scale, side, length, cb) {
     if(scale == 1){
-        return _(array.slice(start, start + length * scale)).map(function(v, i) { return cb(v, i); }).value();
+        return _(array.slice(start, start + length)).map(function(v, i) { return cb(v, i); }).value();
     }else{
         return _(array.slice(start, start + length * scale)).map(function(v, i) {
             return [cb(v, i), i]
@@ -173,6 +209,15 @@ Audio.prototype.getScaledValues = function(array, start, scale, side, length, cb
     }
 };
 
+Audio.prototype.saveBarHistory = function(side, i, value) {
+    var self = this;
+    for(var j = 0; j < self.diffTimings.length; j++){
+        var targetTime = self.diffTimings[j];
+        self.barHistory[side][i][targetTime].add(value);
+    }
+};
+
+Audio.prototype.history = {left: {}, right: {}};
 Audio.prototype.saveHistory = function(side, i, value, targetTime) {
     if(!this.history[side][i])this.history[side][i] = [];
     this.history[side][i].push(value);
@@ -186,7 +231,6 @@ Audio.prototype.requestAnimationFrame = function() {
     });
 };
 
-Audio.prototype.targetFPS = 40;
 Audio.prototype.prevDelta = 0;
 Audio.prototype.process = function(currentDelta, force) {
     this.requestAnimationFrame();

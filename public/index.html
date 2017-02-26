@@ -143,6 +143,10 @@
                         <input type="checkbox" ng-model="pauseOnUnfocus" ng-change="togglepauseOnUnfocus()"> Pause visualization when unfocused
                     </label>
                 </div>
+
+                <span class="debug">
+                    {{debugText}}
+                </span>
             </div>
 
             <!-- Playlist -->
@@ -290,6 +294,7 @@
     <script src="js/angular-sanitize.js"></script>
     <script src="js/angular-sortable-view.js"></script>
 
+    <script src="js/utils.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/track.js"></script>
     <script src="js/main.js"></script>
