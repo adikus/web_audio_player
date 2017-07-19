@@ -5,7 +5,7 @@ Audio = function($audio, $canvas, $scope) {
     this.gui = $scope;
 };
 
-Audio.prototype.targetFPS = 40;
+Audio.prototype.targetFPS = 80;
 Audio.prototype.diffTimings = [0.25, 0.5, 1, 2];
 
 Audio.prototype.setupCanvas = function($canvas) {
@@ -249,7 +249,9 @@ Audio.prototype.process = function(currentDelta, force) {
     }
     this.prevDelta = currentDelta;
 
-    localStorage.setItem('last_position', this.tag.currentTime);
+    if(localStorage.getItem('last_type') === 'video'){
+        localStorage.setItem('last_position', this.tag.currentTime);
+    }
 
     this.ctx.clearRect(0, 0, this.height*2, this.height*2);
 

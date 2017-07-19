@@ -48,12 +48,14 @@
                 </button>
             </div>
             <br>
-            <input id="current_time_slider" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1"/>
+            <div ng-hide="lastType == 'stream'">
+                <input id="current_time_slider" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1"/>
 
-            <div>
-                <strong>
-                    {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
-                </strong>
+                <div ng-hide="currentTrack.info.type == 'stream'">
+                    <strong>
+                        {{currentMinutes + ' : ' + currentSeconds+ ' / ' + totalMinutes + ' : ' + totalSeconds}}
+                    </strong>
+                </div>
             </div>
 
             <!-- Input controls -->

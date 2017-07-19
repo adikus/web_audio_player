@@ -4,6 +4,7 @@ var exec = require('child_process').exec;
 var url = require("url");
 var request = require("request");
 var _ = require('lodash');
+var ffmpeg = require('fluent-ffmpeg');
 
 app.use(express.static('public'));
 
@@ -46,7 +47,11 @@ function retrieveTrackInfo(id, reload, cb) {
             thumbnailImage(filteredInfo.thumbnail, function(thumbnailUrl) {
                 filteredInfo.thumbnail = thumbnailUrl;
                 ytInfos[filteredInfo.id] = filteredInfo;
-                filteredInfo.url = (_(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'})).url;
+
+                var format = _(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'}) || _(info.formats).find({format_id: '93'})
+                filteredInfo.type = format.format_id === '93' ? 'stream' : 'video';
+                filteredInfo.url = format.url;
+
                 var expiresTimestamp = url.parse(filteredInfo.url, true).query.expire;
                 if(!expiresTimestamp){
                     var urlParts = filteredInfo.url.split('/');
@@ -60,6 +65,18 @@ function retrieveTrackInfo(id, reload, cb) {
             cb(ytInfos[id]);
         }
     });
+}
+
+function pipeYTStream(url, req, res) {
+    console.log('Pipe YT stream', req.params.id);
+
+    var command = ffmpeg(url).noVideo().format('mp3');
+    var stream = command.pipe();
+    stream.pipe(res);
+    command.on('error', function() {
+        console.log('Ffmpeg has been killed');
+    });
+    res.on('close', function() { console.log('Closed'); stream.end(); command.kill(); })
 }
 
 app.get('/yt/:id/info', function(req, res) {
@@ -94,8 +111,10 @@ app.get('/yt/:id', function (req, res) {
     retrieveTrackInfo(req.params.id, req.query.reload, function(trackInfo) {
         if(trackInfo.error){
             res.status(404).send('Not found');
-        }else{
+        }else if(trackInfo.type == 'video'){
             pipeYTVideo(trackInfo.url, req, res);
+        }else {
+            pipeYTStream(trackInfo.url, req, res);
         }
     });
 });

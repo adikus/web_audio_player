@@ -138,6 +138,8 @@ app.controller('frequencyBars', function($scope, $sce) {
                 $scope.preloadNext();
             });
             if(track.info){
+                localStorage.setItem('last_type', track.info.type);
+                $scope.lastType = track.info.type;
                 $scope.setBackgroundImage(track.info.thumbnail);
             }
             $scope.storePlaylist();
@@ -444,6 +446,7 @@ app.controller('frequencyBars', function($scope, $sce) {
                 $scope.setCurrentTime(audio.tag.currentTime, audio.tag.duration, false);
             });
             audio.tag.currentTime = localStorage.getItem('last_position') || 0;
+            $scope.lastType = localStorage.getItem('last_type');
         }
 
         $scope.$foreground = $('#foreground');
