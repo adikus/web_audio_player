@@ -74,9 +74,20 @@ function pipeYTStream(url, req, res) {
     var stream = command.pipe();
     stream.pipe(res);
     command.on('error', function() {
-        console.log('Ffmpeg has been killed');
+        console.log('ffmpeg has been killed');
     });
-    res.on('close', function() { console.log('Closed'); stream.end(); command.kill(); })
+
+    var imageCommand =
+        ffmpeg(url)
+            .format('image2')
+            .outputOptions(['-vf fps=fps=1/10', '-updatefirst 1', '-y'])
+            .output('public/screens/' + req.params.id + '.jpg');
+    imageCommand.on('error', function(error) {
+        console.log('screens ffmpeg has been killed');
+    });
+    imageCommand.run();
+
+    res.on('close', function() { stream.end(); command.kill(); imageCommand.kill(); })
 }
 
 app.get('/yt/:id/info', function(req, res) {

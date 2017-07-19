@@ -139,6 +139,7 @@ app.controller('frequencyBars', function($scope, $sce) {
             });
             if(track.info){
                 localStorage.setItem('last_type', track.info.type);
+                localStorage.setItem('last_yt_id', track.id);
                 $scope.lastType = track.info.type;
                 $scope.setBackgroundImage(track.info.thumbnail);
             }

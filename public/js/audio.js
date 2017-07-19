@@ -270,6 +270,11 @@ Audio.prototype.process = function(currentDelta, force) {
 
     if(this.prevTime != Math.floor(this.tag.currentTime) || $('body').hasClass('hidden-gui')){
         this.gui.setCurrentTime(this.tag.currentTime, this.tag.duration);
+
+        if(parseInt(this.tag.currentTime) % 5 === 0 && localStorage.getItem('last_type') === 'stream'){
+            this.gui.setBackgroundImage('screens/' + localStorage.getItem('last_yt_id') + '.jpg')
+        }
+
         this.gui.$apply();
         this.prevTime = Math.floor(this.tag.currentTime);
     }
