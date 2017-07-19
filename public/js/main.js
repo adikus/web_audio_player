@@ -159,7 +159,7 @@ app.controller('frequencyBars', function($scope, $sce) {
         if(url){
             localStorage.setItem('last_background', url);
             if(!$scope.showBackground)return;
-            var img = $scope.lastBgImg && $scope.lastBgImg.url == url ? $scope.lastBgImg : new Image();
+            var img = $scope.lastBgImg && $scope.lastBgImg.url === url && localStorage.getItem('last_type') !== 'stream' ? $scope.lastBgImg : new Image();
             img.onload = function () {
                 $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
                 $scope.backgroundCtx.globalAlpha = 0.5;
