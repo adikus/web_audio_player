@@ -49,8 +49,8 @@ function retrieveTrackInfo(id, reload, cb) {
                 filteredInfo.thumbnail = thumbnailUrl;
                 ytInfos[filteredInfo.id] = filteredInfo;
 
-                var format = _(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'}) || _(info.formats).find({format_id: '93'})
-                filteredInfo.type = format.format_id === '93' ? 'stream' : 'video';
+                var format = _(info.formats).find({format_id: '171'}) || _(info.formats).find({format_id: '140'}) || _(info.formats).find({format_id: '95'}) || _(info.formats).find({format_id: '93'});
+                filteredInfo.type = format.format_id === '95' || format.format_id === '93' ? 'stream' : 'video';
                 filteredInfo.url = format.url;
 
                 var expiresTimestamp = url.parse(filteredInfo.url, true).query.expire;
@@ -75,15 +75,14 @@ function pipeYTStream(url, req, res) {
     var command = ffmpeg(url)
         .output('public/screens/' + req.params.id + '.jpg')
         .format('image2')
-        .videoFilter('fps=fps=1/10')
+        .videoFilter('fps=fps=1/5')
         .outputOptions(['-updatefirst 1', '-y'])
         .output(stream)
         .noVideo()
         .format('mp3');
     command.run();
     stream.pipe(res);
-    command.on('error', function(error) {
-        console.log(error);
+    command.on('error', function() {
         console.log('ffmpeg has been killed');
     });
 

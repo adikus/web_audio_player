@@ -268,7 +268,7 @@ Audio.prototype.process = function(currentDelta, force) {
 
     this.ctx.restore();
 
-    if(this.prevTime != Math.floor(this.tag.currentTime) || $('body').hasClass('hidden-gui')){
+    if(this.prevTime !== Math.floor(this.tag.currentTime) || $('body').hasClass('hidden-gui')){
         this.gui.setCurrentTime(this.tag.currentTime, this.tag.duration);
 
         if(parseInt(this.tag.currentTime) % 5 === 0 && localStorage.getItem('last_type') === 'stream'){

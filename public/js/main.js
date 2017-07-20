@@ -180,6 +180,9 @@ app.controller('frequencyBars', function($scope, $sce) {
                 $scope.backgroundCtx.restore();
             };
             img.src = url;
+            if(localStorage.getItem('last_type') === 'stream'){
+                img.src += '?time=' + new Date().getTime();
+            }
             $scope.lastBgImg = img;
         } else {
             $scope.backgroundCtx.clearRect(0, 0, audio.height, audio.height);
