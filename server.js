@@ -4,6 +4,7 @@ var exec = require('child_process').exec;
 var url = require("url");
 var request = require("request");
 var _ = require('lodash');
+var PassThrough = require('stream').PassThrough;
 var ffmpeg = require('fluent-ffmpeg');
 
 app.use(express.static('public'));
@@ -70,24 +71,23 @@ function retrieveTrackInfo(id, reload, cb) {
 function pipeYTStream(url, req, res) {
     console.log('Pipe YT stream', req.params.id);
 
-    var command = ffmpeg(url).noVideo().format('mp3');
-    var stream = command.pipe();
+    var stream = new PassThrough();
+    var command = ffmpeg(url)
+        .output('public/screens/' + req.params.id + '.jpg')
+        .format('image2')
+        .videoFilter('fps=fps=1/10')
+        .outputOptions(['-updatefirst 1', '-y'])
+        .output(stream)
+        .noVideo()
+        .format('mp3');
+    command.run();
     stream.pipe(res);
-    command.on('error', function() {
+    command.on('error', function(error) {
+        console.log(error);
         console.log('ffmpeg has been killed');
     });
 
-    var imageCommand =
-        ffmpeg(url)
-            .format('image2')
-            .outputOptions(['-vf fps=fps=1/10', '-updatefirst 1', '-y'])
-            .output('public/screens/' + req.params.id + '.jpg');
-    imageCommand.on('error', function(error) {
-        console.log('screens ffmpeg has been killed');
-    });
-    imageCommand.run();
-
-    res.on('close', function() { stream.end(); command.kill(); imageCommand.kill(); })
+    res.on('close', function() { stream.end(); command.kill(); })
 }
 
 app.get('/yt/:id/info', function(req, res) {
