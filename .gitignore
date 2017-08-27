@@ -4,3 +4,4 @@ bower_components
 node_modules
 lib/youtube-dl
 public/screens/*.jpg
+public/dist

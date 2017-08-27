@@ -7,6 +7,19 @@ var _ = require('lodash');
 var PassThrough = require('stream').PassThrough;
 var ffmpeg = require('fluent-ffmpeg');
 
+if (process.env.NODE_ENV !== 'production') {
+    var webpack = require('webpack');
+    var webpackDevMiddleware = require('webpack-dev-middleware');
+
+    const config = require('./webpack.config.js');
+    const compiler = webpack(config);
+
+    app.use(webpackDevMiddleware(compiler, {
+        publicPath: config.output.publicPath, noInfo: true
+    }));
+    app.use(require("webpack-hot-middleware")(compiler));
+}
+
 app.use(express.static('public'));
 
 var ytInfos = {};
