@@ -23,9 +23,23 @@
     <![endif]-->
 </head>
 <body>
-    <audio></audio>
-    <div class="container-fluid" id="main-container">
-        <visualiser></visualiser>
+    <div id="main-container">
+        <audio-comp
+            :audio="audio"
+            :play="play"
+            :position="position"
+            :filename="filename"
+            @loading:ready="loadingReady()"
+            @playback:end="playbackEnded()"
+            @position:update="newPosition => { position = newPosition }"
+        ></audio-comp>
+
+        <visualiser
+            :visualiser="visualiser"
+            :audio="audio"
+            :play="play"
+            :pause-on-unfocus="pauseOnUnfocus"
+        ></visualiser>
     </div>
 
     <script src="tmpl/canvases.vue" type="text/x-template" id="canvases-template"></script>
