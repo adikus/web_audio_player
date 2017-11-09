@@ -16,17 +16,19 @@ window.vm = new Vue({
         play: false,
         position: 0,
         filename: null,
-        pauseOnUnfocus: true
+        pauseOnUnfocus: false
     },
     components: {
         visualiser: VisualiserComp,
         'audio-comp': AudioComp
     },
     mounted () {
+        this.filename = 'yt/-5yD4WYiQBs';
     },
     methods: {
         loadingReady () {
             console.log('Track loaded');
+            //this.play = true;
         },
         playbackEnded () {
             this.play = false;

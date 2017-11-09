@@ -18,6 +18,13 @@ let Visualiser = class Visualiser {
         };
 
         this.history = {left: {}, right: {}};
+
+        this.center = {x: 0, y: 0};
+        this.arcSize = 1;
+        this.arcStart = 0;
+        this.scale = 1;
+
+        this.state = 0;
     }
 
     debugTime (key, cb) {
@@ -30,7 +37,6 @@ let Visualiser = class Visualiser {
     resize () {
         this.height = $(window).innerHeight();
         this.width = $(window).innerWidth();
-        this.offset = this.width - this.height;
 
         this.$foreground.height(this.height);
         this.$foreground.width(this.width);
@@ -39,6 +45,8 @@ let Visualiser = class Visualiser {
 
         this.$background.height(this.height);
         this.$background.width(this.width);
+
+        this.radius = this.height / 1.5;
     }
 
     setupBars () {
@@ -155,15 +163,19 @@ let Visualiser = class Visualiser {
         this.foregroundCtx.clearRect(0, 0, this.width*2, this.height*2);
 
         this.foregroundCtx.save();
-        this.foregroundCtx.translate(this.width, this.height);
+        this.foregroundCtx.translate(this.width - this.center.x, this.height - this.center.y);
 
         let left = this.audio.getFrequencyData('left');
         this.assignBarValues(left, 0, 1, 'left', this.bars.leftInner);
-        this.assignBarValues(left, 216, 1, 'left', this.bars.leftOuter);
+        this.assignBarValues(left, INNER_BARS, 1, 'left', this.bars.leftOuter);
+
+        this.foregroundCtx.restore();
+        this.foregroundCtx.save();
+        this.foregroundCtx.translate(this.width + this.center.x, this.height - this.center.y);
 
         let right = this.audio.getFrequencyData('right');
         this.assignBarValues(right, 0, 1, 'right', this.bars.rightInner);
-        this.assignBarValues(right, 216, 1, 'right', this.bars.rightOuter);
+        this.assignBarValues(right, INNER_BARS, 1, 'right', this.bars.rightOuter);
 
         this.foregroundCtx.restore();
     }
@@ -175,12 +187,86 @@ let Visualiser = class Visualiser {
 
         this.foregroundCtx.save();
         this.foregroundCtx.beginPath();
-        this.foregroundCtx.rotate((bar.a + 90) * Math.PI / 180);
-        this.foregroundCtx.translate(this.height/1.5, 0);
-        this.foregroundCtx.rect(0, 0, bar.s * bar.r * this.height/100, bar.w * this.height/300);
+        let angle = this.scale > 0 ? bar.a : Math.sign(bar.a) * this.arcStart - bar.a;
+        this.foregroundCtx.rotate((angle * this.arcSize + 90 + Math.sign(bar.a) * this.arcStart) * Math.PI / 180);
+        this.foregroundCtx.translate(this.radius, 0);
+        this.foregroundCtx.rect(0, 0, this.scale * bar.s * bar.r * this.height/100, bar.w * this.height/300);
         this.foregroundCtx.fillStyle = color;
         this.foregroundCtx.fill();
         this.foregroundCtx.restore();
+    }
+
+    moveTo(x, y, r, size, start, time) {
+        let defaultRadius = this.height / 1.5;
+        let smallRadius = this.radius;
+        let bigRadius = r;
+        let startMultiplier = this.radius / defaultRadius;
+        let smallArcStart = this.arcStart;
+        let targetArcStart = start;
+        let smallCenterX = this.center.x;
+        let smallCenterY = this.center.y;
+        let targetCenterX = x;
+        let targetCenterY = y;
+
+        return $({t: 0}).animate({t: 1}, {
+            duration: time,
+            step: (t) => {
+                this.radius = smallRadius + t * (bigRadius - smallRadius);
+                this.center = {x: smallCenterX + (targetCenterX - smallCenterX) * t, y: smallCenterY + (targetCenterY - smallCenterY) * t};
+                let currentMultiplier = startMultiplier + t * (1 / size - startMultiplier);
+                this.arcSize = 1.0 / currentMultiplier;
+                this.arcStart = smallArcStart + t * (targetArcStart - smallArcStart);
+                //console.log(this.center.x, this.center.y, this.radius, this.arcSize, this.arcStart);
+            }
+        }).promise();
+    }
+
+    async move (state) {
+        let defaultRadius = this.height / 1.5;
+        let multiplier = 100;
+
+        let times = { 0: 600, 1: 400, 2: 0, 3: 20, 4: 20, 5: 20, 6: 600 };
+
+        let arcStart = 60 - 90.0/multiplier;
+
+        let stateFunctions = {
+            0: async (time) => {
+                await this.moveTo(0, 0, defaultRadius, 1.0, 0, time);
+            },
+            1: async (time) => {
+                let _mult = 5;
+                await this.moveTo(((_mult - 1) * defaultRadius) * -0.8666, ((_mult - 1) * defaultRadius) * 0.5, defaultRadius * _mult, 1.0 / _mult, arcStart, time);
+            },
+            2: async (time) => {
+                await this.moveTo(this.width/4 + ((multiplier - 1) * defaultRadius) * -0.8666, this.height/2 + ((multiplier - 1) * defaultRadius) * 0.5, defaultRadius * multiplier, 1.0 / multiplier, arcStart, time);
+            },
+            3: async (time) => {
+                this.scale = -1;
+                this.center.x = this.width/4 + ((multiplier + 1) * defaultRadius) * 0.8666;
+                this.center.y = this.height/2 + ((multiplier + 1) * defaultRadius) * -0.5;
+                this.arcStart = 240 - 90.0/multiplier;
+            },
+            4: async (time) => {
+                for(let i = 99; i > 60; i -= 10){
+                    await this.moveTo(this.width/4 + ((i + 1) * defaultRadius) * 0.8666, this.height/2 + ((i + 1) * defaultRadius) * -0.5, defaultRadius * i, 1.0 / i, 240 - 90.0/i, time);
+                }
+            },
+            5: async (time) => {
+                for(let i = 59; i > 20; i -= 5){
+                    await this.moveTo(this.width/4 + ((i + 1) * defaultRadius) * 0.8666, this.height/2 + ((i + 1) * defaultRadius) * -0.5, defaultRadius * i, 1.0 / i, 240 - 90.0/i, time);
+                }
+            },
+            6: async (time) => {
+                for(let i = 19; i > 4; i -= 2){
+                    await this.moveTo(this.width/3 + ((i + 1) * defaultRadius) * 0.8666, this.height/2 + ((i + 1) * defaultRadius) * -0.5, defaultRadius * i, 1.0 / i, 240 - 90.0/i, time);
+                }
+            },
+            7: async (time) => {
+                await this.moveTo(this.width, -this.height, this.height*1.5, 0.5, 180, time);
+            }
+        };
+
+        stateFunctions[state](times[state > this.state ? state - 1 : state]);
     }
 };
 

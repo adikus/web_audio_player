@@ -3,7 +3,7 @@ var webpack = require('webpack');
 var CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
-    entry: ['./src/main.js'],
+    entry: ['babel-polyfill', './src/main.js'],
     output: {
         path: path.resolve(__dirname, './public/'),
         publicPath: '/',

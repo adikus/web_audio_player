@@ -19,7 +19,7 @@
         },
         methods: {
             requestAnimationFrame () {
-                window.requestAnimationFrame( step => this.process(step) );
+                window.requestAnimationFrame( step => this.process(step, true) );
             },
 
             process (currentDelta, force) {
