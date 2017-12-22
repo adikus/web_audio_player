@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 var url = require("url");
 var request = require("request");
 var _ = require('lodash');
@@ -128,6 +129,88 @@ app.get('/yt/:id', function (req, res) {
         }
     });
 });
+
+var spotifyTrackLengths = {};
+var runningSpotifyStreams = {};
+var runningFfmpegProcesses = {};
+
+function pipeSpotifyStream(req, res) {
+    var duration = spotifyTrackLengths[req.params.id];
+    var length = Math.round(duration / 1000.0 * 40 * 1024 / 1.03);
+
+    var bytesMatch = req.headers.range.match(/bytes=(\d*)-(\d)?/);
+    var seekTo = bytesMatch[1] / 40.0 / 1024 * 1000 * 1.027;
+    console.log('Playing spotify track', req.params.id, 'from',  seekTo/1000, 's');
+
+    var spotifyStream = spawn('python3', ['/home/andrej/python/spotifyripper/play_track.py', req.params.id, seekTo]);
+
+    res.set({
+        'Content-Type': 'audio/mp3',
+        'Content-Length': length,
+        'Content-Range': 'bytes ' + bytesMatch[1] + '-' + (length-1) + '/' + length,
+        'Accept-Ranges': 'Bytes'
+    });
+    res.status(206);
+
+    var ffmpegCommand = ffmpeg(url)
+        .input(spotifyStream.stdout)
+        .inputOptions(['-f', 's16le', '-ar', '44.1k', '-ac', '2'])
+        .output(res)
+        .outputOptions(['-b:a', '320k'])
+        .format('mp3');
+    ffmpegCommand.run();
+
+    spotifyStream.on('error', function(err) {
+        console.log('error', err);
+    });
+    spotifyStream.on('exit', function () {
+        ffmpegCommand.kill();
+    });
+    ffmpegCommand.on('error', function(err) {
+        if(err.toString().indexOf('SIGKILL') < 0) console.log('error ffmpeg', err);
+    });
+    res.on('close', function() { ffmpegCommand.kill(); spotifyStream.stdin.pause(); spotifyStream.kill('SIGKILL'); });
+}
+
+app.get('/spotify/:id', function (req, res) {
+    if(!req.headers.range || !spotifyTrackLengths[req.params.id]){
+        exec('python3 /home/andrej/python/spotifyripper/play_track.py ' + req.params.id + ' 0 --info', function (error, stdout, stderror){
+            var durationMatch = stdout.match(/"duration":(\d*)/);
+            var duration = parseInt(durationMatch[1])
+            spotifyTrackLengths[req.params.id] = duration;
+            var length = Math.round(duration / 1000.0 * 40 * 1024 / 1.03);
+
+            if(!req.headers.range){
+                res.set({
+                    'Content-Type': 'audio/mp3',
+                    'Content-Length': length,
+                    'Accept-Ranges': 'Bytes'
+                });
+                res.status(200);
+                res.write('\n');
+                res.end();
+            } else {
+                pipeSpotifyStream(req, res);
+            }
+        });
+        return;
+    }
+
+    pipeSpotifyStream(req, res);
+});
+
+function cleanUpSpotify(){
+    _(runningSpotifyStreams).each(function(_key, stream) {
+        stream.stdin.pause();
+        stream.kill('SIGKILL');
+    });
+    _(runningFfmpegProcesses).each(function(_key, proc) {
+        proc.kill('SIGKILL');
+    });
+}
+
+process.on('SIGINT', () => { cleanUpSpotify(); process.exit(); });
+process.on('SIGTERM', () => { cleanUpSpotify(); process.exit();  });
 
 var options = {
     url: 'https://api.github.com/repos/rg3/youtube-dl/tags',
