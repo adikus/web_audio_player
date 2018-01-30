@@ -1,5 +1,3 @@
-S3_URL = 'https://yt-playlist.s3-eu-west-1.amazonaws.com/playlists/';
-
 Track = function(options, $scope) {
     this.ngScope = $scope;
     if (options.youtube){
@@ -38,12 +36,12 @@ Track.prototype.setupForAPI = function(item) {
     this.title = item.title;
     this.uploader = item.metadata.channelTitle;
     this.description = '';
-    this.playlist_id = item.playlist_id;
+    this.playlist_id = item.playlistVideo.playlist_id;
     this.item = item;
-    if(item.metadata.s3_mp3_file){
-        this.url = S3_URL + this.playlist_id + '/mp3/' + item.metadata.s3_mp3_file;
-    } else if(item.metadata.s3_file) {
-        this.url = S3_URL + this.playlist_id + '/' + item.metadata.s3_file;
+    if(item.mp3Upload && item.mp3Upload.url){
+        this.url = item.mp3Upload.url;
+    } else if(item.originalUpload && item.originalUpload.url) {
+        this.url = item.originalUpload.url;
     }
     var thumbnail = item.metadata.thumbnails.maxres || item.metadata.thumbnails.standard || item.metadata.thumbnails.high;
     this.info = {thumbnail: thumbnail.url};
