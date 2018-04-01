@@ -118,6 +118,9 @@ function pipeYTVideo(url, req, res) {
 }
 
 app.get('/yt/:id', function (req, res) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", "*");
     retrieveTrackInfo(req.params.id, req.query.reload, function(trackInfo) {
         if(trackInfo.error){
             res.status(404).send('Not found');
