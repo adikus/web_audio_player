@@ -74,7 +74,7 @@ Track.prototype.loadYTInfo = function(cb) {
 };
 
 Track.prototype.reload = function(cb) {
-    if(this.type == 'yt') {
+    if(this.type === 'yt' || this.url.slice(0, 3) === 'yt/') {
         this.loadYTInfo(cb);
     } else if(cb) {
         cb();

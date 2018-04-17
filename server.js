@@ -26,7 +26,7 @@ function thumbnailImage(url, cb) {
 }
 
 function isExpired(id) {
-    if(!ytInfos[id])return true;
+    if(!ytInfos[id] || !ytInfos[id].expiresAt) return true;
     return ytInfos[id].expiresAt.getTime() < (new Date()).getTime();
 }
 
