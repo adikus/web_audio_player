@@ -42,6 +42,8 @@ Track.prototype.setupForAPI = function(item) {
         this.url = item.mp3Upload.url;
     } else if(item.originalUpload && item.originalUpload.url) {
         this.url = item.originalUpload.url;
+    } else {
+        this.url = 'yt/'+this.id;
     }
     var thumbnail = item.metadata.thumbnails.maxres || item.metadata.thumbnails.standard || item.metadata.thumbnails.high;
     this.info = {thumbnail: thumbnail.url};
