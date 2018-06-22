@@ -42,6 +42,7 @@ app.controller('frequencyBars', function($scope, $sce) {
 
     $scope.searchOnApi = function(search) {
         var match = false;
+        var playlistMatch = false;
         $scope.searchResults = [];
         if(match = search.match(Track.yt_regex)){
             $.get(
@@ -55,10 +56,10 @@ app.controller('frequencyBars', function($scope, $sce) {
             );
         }
         var playlistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch(?:.+?)|playlist\?)list=([\-_A-Za-z\d]+)/;
-        if(match = search.match(playlistRegex)){
+        if(playlistMatch = search.match(playlistRegex)){
             $.get(
                 YT_API_URL+'/playlists',
-                {key: $scope.yt_api_key, part: 'id,snippet', id: match[1]},
+                {key: $scope.yt_api_key, part: 'id,snippet', id: playlistMatch[1]},
                 function (response) {
                     $scope.searchResults.push.apply($scope.searchResults, response.items);
                     $scope.$apply();
@@ -66,7 +67,7 @@ app.controller('frequencyBars', function($scope, $sce) {
                 }
             );
         }
-        if(!match){
+        if(!match && !playlistMatch){
             $.get(
                 YT_API_URL+'/search',
                 {key: $scope.yt_api_key, part: 'snippet', q: search},
