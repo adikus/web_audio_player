@@ -45,8 +45,8 @@ Track.prototype.setupForAPI = function(item) {
     } else {
         this.url = 'yt/'+this.id;
     }
-    var thumbnail = item.metadata.thumbnails.maxres || item.metadata.thumbnails.standard || item.metadata.thumbnails.high;
-    this.info = {thumbnail: thumbnail.url};
+    var thumbnail = item.metadata && item.metadata.thumbnails && (item.metadata.thumbnails.maxres || item.metadata.thumbnails.standard || item.metadata.thumbnails.high);
+    this.info = {thumbnail: thumbnail && thumbnail.url};
 
     this.ready = true;
     this.loading = false;
