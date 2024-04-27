@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Web Audio Frequency Visualiser",
   "engines": {
-    "node": "0.12.6"
+    "node": "12.20.1"
   },
   "main": "server.js",
   "scripts": {

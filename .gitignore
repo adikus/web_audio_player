@@ -3,4 +3,5 @@
 bower_components
 node_modules
 lib/youtube-dl
+lib/yt-dlp
 public/screens/*.jpg
