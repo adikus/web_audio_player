@@ -76,13 +76,14 @@ function pipeYTStream(url, req, res) {
         .output('public/screens/' + req.params.id + '.jpg')
         .format('image2')
         .videoFilter('fps=fps=1/5')
-        .outputOptions(['-updatefirst 1', '-y'])
+        .outputOptions(['-update 1', '-y'])
         .output(stream)
         .noVideo()
         .format('mp3');
     command.run();
     stream.pipe(res);
-    command.on('error', function() {
+    command.on('error', function(err) {
+        console.error(err);
         console.log('ffmpeg has been killed');
     });
 
